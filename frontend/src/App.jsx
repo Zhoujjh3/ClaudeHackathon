@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
 import ChatCoach from './components/ChatCoach'
-import SnapAnalyze from './components/SnapAnalyze'
-import { LayoutDashboard, MessageSquare, Camera } from 'lucide-react'
+import { LayoutDashboard, MessageSquare } from 'lucide-react'
+import axios from 'axios'
+
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
 const tabs = [
   { id: 'dashboard', label: 'Home', Icon: LayoutDashboard },
   { id: 'coach', label: 'Coach', Icon: MessageSquare },
-  { id: 'snap', label: 'Snap', Icon: Camera },
 ]
 
 export default function App() {
@@ -15,11 +16,48 @@ export default function App() {
   const [context, setContext] = useState({ location: '', energyLevel: 'normal' })
   const [initialMessage, setInitialMessage] = useState(null)
   const [clock, setClock] = useState(new Date())
+  const [calendarConnected, setCalendarConnected] = useState(false)
+  const [calendarEvents, setCalendarEvents] = useState(null) // null = not loaded, [] = loaded but empty
 
+  // Clock tick
   useEffect(() => {
     const timer = setInterval(() => setClock(new Date()), 30000)
     return () => clearInterval(timer)
   }, [])
+
+  // On mount: check calendar status + handle OAuth callback redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('calendar') === 'connected') {
+      window.history.replaceState({}, '', '/')
+      fetchCalendarEvents()
+    } else {
+      checkCalendarStatus()
+    }
+  }, [])
+
+  const checkCalendarStatus = async () => {
+    try {
+      const { data } = await axios.get(`${API_BASE}/api/calendar/status`)
+      if (data.connected) {
+        setCalendarConnected(true)
+        fetchCalendarEvents()
+      }
+    } catch {
+      // Calendar not available — silent fail
+    }
+  }
+
+  const fetchCalendarEvents = async () => {
+    try {
+      const { data } = await axios.get(`${API_BASE}/api/calendar/events`)
+      setCalendarConnected(true)
+      setCalendarEvents(data.events)
+    } catch {
+      setCalendarConnected(false)
+      setCalendarEvents(null)
+    }
+  }
 
   const handleScenario = (message) => {
     setInitialMessage(message)
@@ -47,17 +85,24 @@ export default function App() {
       {/* Main content */}
       <main className="flex-1 overflow-hidden">
         <div className={activeTab === 'dashboard' ? 'block' : 'hidden'}>
-          <Dashboard context={context} setContext={setContext} onScenario={handleScenario} />
+          <Dashboard
+            context={context}
+            setContext={setContext}
+            onScenario={handleScenario}
+            calendarConnected={calendarConnected}
+            calendarEvents={calendarEvents}
+            onCalendarRefresh={fetchCalendarEvents}
+            apiBase={API_BASE}
+          />
         </div>
         <div className={activeTab === 'coach' ? 'block h-[calc(100vh-112px)]' : 'hidden'}>
           <ChatCoach
             context={context}
+            calendarEvents={calendarEvents}
             initialMessage={initialMessage}
             onInitialMessageSent={() => setInitialMessage(null)}
+            apiBase={API_BASE}
           />
-        </div>
-        <div className={activeTab === 'snap' ? 'block' : 'hidden'}>
-          <SnapAnalyze context={context} />
         </div>
       </main>
 
