@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, ImagePlus, X, Loader2, MapPin, Zap } from 'lucide-react'
+import Logo from './Logo'
 import axios from 'axios'
 
 const SUGGESTED_PROMPTS = [
@@ -96,7 +97,7 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-3 animate-slide-up ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-xl bg-sage-600 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5 shadow-sm">FF</div>
+              <Logo size={32} className="rounded-xl flex-shrink-0 mt-0.5 shadow-sm" />
             )}
             <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
               msg.role === 'user'
@@ -114,7 +115,7 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
 
         {loading && (
           <div className="flex gap-3 justify-start animate-fade-in">
-            <div className="w-8 h-8 rounded-xl bg-sage-600 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">FF</div>
+            <Logo size={32} className="rounded-xl flex-shrink-0 shadow-sm" />
             <div className="bg-white border border-warm-200 rounded-2xl rounded-tl-md px-4 py-3 flex items-center gap-2 shadow-sm">
               <Loader2 size={14} className="animate-spin text-sage-500" />
               <span className="text-xs text-warm-400">Thinking...</span>

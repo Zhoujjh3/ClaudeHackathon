@@ -3,6 +3,7 @@ import Dashboard from './components/Dashboard'
 import ChatCoach from './components/ChatCoach'
 import MyProfile from './components/MyProfile'
 import Onboarding from './components/Onboarding'
+import Logo from './components/Logo'
 import { Home, MessageCircle, User } from 'lucide-react'
 import axios from 'axios'
 
@@ -114,9 +115,7 @@ export default function App() {
       {/* Header */}
       <header className="px-6 pt-5 pb-4 flex items-center justify-between sticky top-0 bg-cream/90 backdrop-blur-md z-10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-sage-600 flex items-center justify-center">
-            <span className="text-white font-bold text-xs tracking-tight">FF</span>
-          </div>
+          <Logo size={36} className="rounded-xl shadow-sm" />
           <div>
             <span className="font-display text-lg font-bold text-warm-900">FieldFit</span>
           </div>

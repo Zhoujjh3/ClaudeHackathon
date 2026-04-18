@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react'
+import Logo from './Logo'
 
 const DIETARY_OPTIONS = [
   'Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free',
@@ -63,9 +64,7 @@ export default function Onboarding({ onComplete }) {
     // Welcome
     <div key="welcome" className="space-y-8 animate-fade-in">
       <div className="text-center pt-8">
-        <div className="w-16 h-16 rounded-2xl bg-sage-600 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-sage-600/20">
-          <span className="text-white font-bold text-xl">FF</span>
-        </div>
+        <Logo size={64} className="mx-auto mb-6 rounded-2xl shadow-lg shadow-sage-600/20" />
         <h1 className="font-display text-3xl font-bold text-warm-900">Welcome to FieldFit</h1>
         <p className="text-warm-500 mt-3 text-sm leading-relaxed max-w-sm mx-auto">
           Your personal health coach, built for the unpredictable life of field journalism. Let's set things up — about 60 seconds.
