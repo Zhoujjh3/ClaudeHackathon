@@ -1,2 +1,4 @@
-.env
-.env.example
+# Real secrets — never commit these
+backend/.env
+backend/credentials.json
+backend/token.json
