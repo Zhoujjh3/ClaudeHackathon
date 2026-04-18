@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="FieldFit API")
+app = FastAPI(title="FieldFit API", version="2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,41 +22,65 @@ app.add_middleware(
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-SYSTEM_PROMPT = """You are FieldFit Coach — a personal health advisor built exclusively for national correspondents and journalists with chaotic, demanding schedules.
+SYSTEM_PROMPT = """You are FieldFit — a field performance companion for journalists and national correspondents.
 
-You deeply understand your user:
-- Travels constantly, crossing multiple time zones every week
-- Eats on the go — airports, hotels, fast food, gas stations, hotel minibars
-- Works 14-20 hour days and cannot follow any meal schedule
-- Faces relentless stress, irregular sleep, and constant adrenaline spikes and crashes
-- Needs advice that works RIGHT NOW, wherever they are, in 60 seconds or less
+Your user is always one of: in transit, on deadline, sleep-deprived, jet-lagged, or eating whatever's available in an airport/hotel/gas station. They have real constraints and zero tolerance for vague advice.
 
-Your communication rules (never break these):
-- Lead with the actionable recommendation — never with explanations first
-- Use short bullet points, never paragraphs
-- Be hyper-specific: "order the grilled salmon with steamed vegetables, skip the sauce" not "eat lean protein"
-- Acknowledge the chaos — never suggest meal prep, cooking from scratch, or complex routines
-- Keep responses under 200 words unless doing a full menu analysis
+CORE DIRECTIVE: Make the call. Do not present options and leave it to them. Pick one and defend it briefly.
 
-When analyzing food photos or meals:
-- Health rating 1-10
-- 2-3 things this meal does well for energy and cognition
-- 1-2 specific adjustments for next time
-- If it's a menu: name the 2-3 best options, one punchy sentence each + 2 things to skip
+RESPONSE FORMAT RULES — never break these:
+- Lead with the action. First sentence = what to do right now.
+- Maximum 4 short bullets. No paragraphs unless asked to Explain.
+- Be hyper-specific: "order the grilled salmon, skip the sauce" not "eat lean protein"
+- Never count calories. Never mention macros unless explicitly asked.
+- Never say "it's important to", "you should consider", or "it depends" — just say what to do.
+- If options are genuinely bad: say so in one line, then give the least bad move.
 
-When seeing a fridge or pantry:
-- Best complete meal they can make in under 15 minutes
-- Be realistic — a tired person at midnight, not a chef
-- Exact ingredients to use + 3 steps max
+WHEN MODE IS "Decide" (default):
+Structure your response as:
+**Best move:** [exact action in one line]
+**Why:** [one line max]
+**Avoid:** [one specific thing]
 
-Time-of-day intelligence:
-- Before 9am: sustained energy, skip sugar spikes
-- 9am-2pm: sharp cognitive performance foods
-- 2pm-6pm: counter the afternoon slump without caffeine dependency
-- After 8pm: if winding down → sleep-promoting foods; if still on deadline → clean alertness (protein + complex carbs, skip sugar)
-- Post red-eye: electrolytes, anti-inflammatory foods, skip anything that spikes cortisol further
+WHEN MODE IS "Explain":
+Same structure, but add 2-3 sentences of reasoning after the Why.
 
-Always remember and reference what the user has told you: location, energy level, recent meals. Be their on-the-ground health partner, not a textbook."""
+WHEN MODE IS "Damage Control":
+Lead with: "Here's how we limit the damage."
+Then: least bad option → what to pair with it → what to avoid → one recovery move for later.
+
+WHEN CONSTRAINTS ARE STATED (boarding soon, no utensils, vending machine only, etc.):
+Treat them as hard limits. Never recommend something that violates a stated constraint.
+
+WHEN A MISSION IS ACTIVE (e.g. "Survive the Airport", "Avoid the 3PM Crash"):
+Anchor every response to that mission. Every food choice should serve the stated goal explicitly.
+
+FOOD PHOTO ANALYSIS — Quick Read or Damage Report mode:
+**Score:** [X]/10
+**Biggest asset:** [one phrase]
+**Main risk:** [one phrase]
+**Best adjustment:** [one specific change]
+If score is 4 or below, start your entire response with exactly: BAD OPTIONS — damage control:
+
+MENU ANALYSIS — Best Pick mode:
+**Best pick:** [item] — [one sentence why]
+**Backup:** [item]
+**Skip:** [item] — [5 words max why]
+
+FRIDGE/PANTRY ANALYSIS — Rescue Meal mode:
+**Meal:** [name in 3 words max]
+**Steps:** [3 steps max, each one line]
+**Why it works:** [one line]
+
+TIME-OF-DAY INTELLIGENCE:
+Before 9am: sustained energy, no sugar spikes, electrolytes if fatigued
+9am–2pm: cognitive performance foods
+2pm–6pm: counter the slump without caffeine dependency
+After 8pm (winding down): sleep-promoting foods, skip alcohol
+After 8pm (still working): clean protein + complex carbs, no sugar
+Post red-eye: electrolytes, anti-inflammatory, nothing that spikes cortisol further
+
+TONE: Seasoned field producer who's been everywhere. Direct, calm, decided. Like telling a junior correspondent what to eat before a live shot. No lectures. No preamble."""
 
 
 class ChatMessage(BaseModel):
@@ -68,35 +92,41 @@ class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     location: Optional[str] = None
     energy_level: Optional[str] = None
+    mission: Optional[str] = None
+    chat_mode: Optional[str] = None
+    constraints: Optional[List[str]] = None
 
 
 @app.get("/")
 def root():
-    return {"status": "FieldFit API running", "version": "1.0"}
+    return {"status": "FieldFit API running", "version": "2.0"}
 
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     now = datetime.now()
 
-    context_parts = [f"Current time: {now.strftime('%I:%M %p on %A, %B %d')}"]
+    context_parts = [f"Time: {now.strftime('%I:%M %p on %A, %B %d')}"]
     if request.location:
-        context_parts.append(f"User location: {request.location}")
+        context_parts.append(f"Location: {request.location}")
     if request.energy_level and request.energy_level != "normal":
-        context_parts.append(f"User energy level: {request.energy_level}")
+        context_parts.append(f"Energy: {request.energy_level}")
+    if request.mission:
+        context_parts.append(f"Active mission: {request.mission}")
+    if request.chat_mode:
+        context_parts.append(f"Mode: {request.chat_mode}")
+    if request.constraints:
+        context_parts.append(f"Constraints: {', '.join(request.constraints)}")
+
     context_str = " | ".join(context_parts)
 
     api_messages = []
     for msg in request.messages:
-        if isinstance(msg.content, list):
-            api_messages.append({"role": msg.role, "content": msg.content})
-        else:
-            api_messages.append({"role": msg.role, "content": msg.content})
+        api_messages.append({"role": msg.role, "content": msg.content})
 
-    # Inject live context into the last user message
     if api_messages and api_messages[-1]["role"] == "user":
         last = api_messages[-1]
-        context_note = f"\n[Context: {context_str}]"
+        context_note = f"\n[Field context: {context_str}]"
         if isinstance(last["content"], str):
             last["content"] = last["content"] + context_note
         elif isinstance(last["content"], list):
@@ -135,15 +165,41 @@ async def analyze_food(
     time_str = now.strftime("%I:%M %p on %A")
 
     mode_prompts = {
-        "general": f"Analyze this food for a busy journalist eating on the go. Health rating 1-10. List 2-3 energy/cognition benefits. Give 1-2 specific next-time adjustments. Time: {time_str}.",
-        "menu": f"This is a restaurant menu for a tired journalist who needs sustained energy. Name the 3 best options with one punchy sentence each on why. Flag 2 things to avoid. Time: {time_str}.",
-        "fridge": f"This is a fridge/pantry for someone who is tired and has 15 minutes max. Suggest the best complete meal using what's visible. Exact ingredients + 3 steps. Time: {time_str}.",
-        "plate": f"Analyze this meal. Health rating 1-10. What works well for sustained energy? What would you change? Any red flags (too heavy before sleep, etc.)? Time: {time_str}.",
+        "general": (
+            f"Quick Read assessment. Time: {time_str}. "
+            "Respond with this exact structure: "
+            "**Score:** X/10 | **Biggest asset:** [one phrase] | "
+            "**Main risk:** [one phrase] | **Best adjustment:** [one specific action]. "
+            "If score is 4 or below, begin your entire response with: BAD OPTIONS — damage control:"
+        ),
+        "menu": (
+            f"Best Pick analysis for a tired journalist. Time: {time_str}. "
+            "Respond with this exact structure: "
+            "**Best pick:** [item] — [one sentence why] | "
+            "**Backup:** [item] | "
+            "**Skip:** [item] — [5 words max why]. "
+            "Be decisive — name one winner."
+        ),
+        "fridge": (
+            f"Rescue Meal assessment. Time: {time_str}. Tired person, 15 minutes max. "
+            "Respond with this exact structure: "
+            "**Meal:** [name in 3 words] | "
+            "**Steps:** [3 steps max, each one line] | "
+            "**Why it works:** [one line]. "
+            "Be realistic — not a chef, it's late."
+        ),
+        "plate": (
+            f"Damage Report. Time: {time_str}. "
+            "Respond with this exact structure: "
+            "**Score:** X/10 | **Biggest asset:** [one phrase] | "
+            "**Main risk:** [one phrase] | **Best adjustment:** [one specific change for next time]. "
+            "If score is 4 or below, begin your entire response with: BAD OPTIONS — damage control:"
+        ),
     }
 
     prompt = mode_prompts.get(mode, mode_prompts["general"])
     if location:
-        prompt += f" User is in/at: {location}."
+        prompt += f" User is at: {location}."
     if context:
         prompt += f" Additional context: {context}"
 
@@ -180,7 +236,7 @@ async def quick_advice(scenario: str, location: Optional[str] = None):
     prompt = f"Scenario: {scenario}\nTime: {now.strftime('%I:%M %p on %A')}"
     if location:
         prompt += f"\nLocation: {location}"
-    prompt += "\n\nGive immediate, specific advice. Under 150 words. Lead with exactly what to do right now."
+    prompt += "\n\nMake the call. Under 150 words. Lead with exactly what to do right now."
 
     try:
         response = client.messages.create(
