@@ -4,22 +4,59 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-* { -webkit-tap-highlight-color: transparent; }
-
-body {
-  background-color: #FAF8F5;
-  color: #1F1B19;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overscroll-behavior: none;
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  * { -webkit-tap-highlight-color: transparent; }
+  html { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { @apply bg-neutral-50 text-neutral-900; overscroll-behavior: none; }
+  .dark body, .dark { @apply bg-neutral-950 text-neutral-100; }
+  ::selection { @apply bg-emerald-100 text-emerald-900; }
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-thumb { @apply bg-neutral-300 rounded-full; }
+  .dark ::-webkit-scrollbar-thumb { @apply bg-neutral-700; }
+  textarea { field-sizing: content; }
 }
 
-.dark body, .dark { background-color: #1F1B19; color: #FAF8F5; }
-
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #C4B8AB; border-radius: 2px; }
-.dark ::-webkit-scrollbar-thumb { background: #3D3632; }
-
-textarea { field-sizing: content; }
-::selection { background: #C8D9C8; color: #1F1B19; }
+@layer components {
+  .card {
+    @apply bg-white border border-neutral-200/80 rounded-2xl;
+  }
+  .dark .card {
+    @apply bg-neutral-900 border-neutral-800;
+  }
+  .card-sm {
+    @apply bg-white border border-neutral-200/80 rounded-xl;
+  }
+  .dark .card-sm {
+    @apply bg-neutral-900 border-neutral-800;
+  }
+  .label {
+    @apply text-[10px] font-semibold uppercase tracking-widest text-neutral-400;
+  }
+  .btn-primary {
+    @apply bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-all active:scale-[0.97];
+  }
+  .btn-ghost {
+    @apply bg-neutral-100 hover:bg-neutral-200 text-neutral-600 font-medium rounded-xl transition-all;
+  }
+  .dark .btn-ghost {
+    @apply bg-neutral-800 hover:bg-neutral-700 text-neutral-400;
+  }
+  .pill {
+    @apply px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150;
+  }
+  .pill-active {
+    @apply bg-emerald-600 text-white;
+  }
+  .pill-inactive {
+    @apply bg-neutral-100 text-neutral-500 hover:bg-neutral-200;
+  }
+  .dark .pill-inactive {
+    @apply bg-neutral-800 text-neutral-400 hover:bg-neutral-700;
+  }
+  .input {
+    @apply bg-neutral-50 border border-neutral-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all;
+  }
+  .dark .input {
+    @apply bg-neutral-800 border-neutral-700 text-neutral-100 focus:ring-emerald-900/30;
+  }
+}
