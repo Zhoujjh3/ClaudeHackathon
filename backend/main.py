@@ -21,7 +21,7 @@ try:
 except ImportError:
     GOOGLE_AVAILABLE = False
 
-app = FastAPI(title="FieldFit API")
+app = FastAPI(title="FieldFit API", version="3.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,35 +39,117 @@ SCOPES           = ["https://www.googleapis.com/auth/calendar.readonly"]
 REDIRECT_URI     = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/calendar/callback")
 FRONTEND_URL     = os.getenv("FRONTEND_URL", "http://localhost:8000")
 
-SYSTEM_PROMPT = """You are FieldFit Coach — a personal health advisor built exclusively for national correspondents and journalists with chaotic, demanding schedules.
+SYSTEM_PROMPT = """You are FieldFit — a field decision system for journalists and correspondents in chaotic food environments.
 
-You deeply understand your user:
-- Travels constantly, crossing multiple time zones every week
-- Eats on the go — airports, hotels, fast food, gas stations, hotel minibars
-- Works 14-20 hour days and cannot follow any meal schedule
-- Faces relentless stress, irregular sleep, and constant adrenaline spikes and crashes
-- Needs advice that works RIGHT NOW, wherever they are, in 60 seconds or less
+Your user is always one of: in transit, on deadline, sleep-deprived, jet-lagged, or eating whatever's available. They need the move — not an explanation of nutrition science.
 
-Your communication rules (never break these):
-- Lead with the actionable recommendation — never with explanations first
-- Use short bullet points, never paragraphs
-- Be hyper-specific: "order the grilled salmon with steamed vegetables, skip the sauce" not "eat lean protein"
-- Acknowledge the chaos — never suggest meal prep, cooking from scratch, or complex routines
-- Keep responses under 200 words unless doing a full menu analysis
+CORE DIRECTIVE: Make the call. Name the best option. Defend it briefly. Move on.
 
-Time-of-day intelligence:
-- Before 9am: sustained energy, skip sugar spikes
-- 9am-2pm: sharp cognitive performance foods
-- 2pm-6pm: counter the afternoon slump without caffeine dependency
-- After 8pm: if winding down → sleep-promoting foods; if still on deadline → clean alertness (protein + complex carbs, skip sugar)
-- Post red-eye: electrolytes, anti-inflammatory foods, skip anything that spikes cortisol further
+━━━ RESPONSE FORMAT ━━━
+
+WHEN MODE IS "Decide" (default — use this unless told otherwise):
+**Best move:** [exact action, one line]
+**Why:** [one line max]
+**Backup:** [if best move unavailable, do this instead]
+**Avoid:** [one specific thing and why in 5 words]
+**Recovery:** [what to do in 2-3 hours]
+
+Then, when the decision has meaningful time consequences, add:
+**NOW →** [action for next 30 minutes]
+**LATER →** [2-3 hour note]
+**TOMORROW →** [morning note, only if truly relevant — skip if not]
+
+WHEN MODE IS "Explain":
+Same labels as Decide, but add 2-3 sentences of reasoning after Why.
+Still include NOW → / LATER → when relevant.
+
+WHEN MODE IS "Damage Control":
+User already made a bad choice or only has bad options. Do not judge.
+**Least bad option:** [specific item/action]
+**Pair with:** [what to have alongside to blunt the damage]
+**Don't stack:** [what not to add on top]
+**Recovery move:** [what to do in 2-3 hours to stabilize]
+
+Then add time horizons:
+**NOW →** [immediate action]
+**LATER →** [2-3 hour stabilization note]
+**TOMORROW →** [morning recovery note if relevant]
+
+━━━ COMPOUNDING MISTAKES ━━━
+
+When you detect a bad chain — pastry + black coffee on empty stomach, chips + energy drink + no water, late heavy meal + poor sleep timing, sugar spike followed by long food gap — flag it:
+⚡ Stack warning: [what you see] — [what usually follows if they don't act]
+
+This is one of the most valuable things you can tell them. Use it when the pattern is genuinely there.
+
+━━━ CONSTRAINTS ━━━
+
+When constraints are stated (boarding soon, no utensils, vending machine only, need sleep soon, eating while walking, nothing fresh, etc.):
+- Treat them as hard limits. Never recommend something that violates one.
+- "Need sleep soon" — always add a **Sleep impact:** note and include TOMORROW → section.
+
+━━━ MISSION ━━━
+
+When a mission is active, anchor every recommendation to it explicitly.
+- "Survive travel day" = every choice prioritizes staying functional in transit
+- "Avoid the 3PM crash" = everything serves blood sugar stability through the afternoon
+- "Recover from bad sleep" = prioritize anti-inflammatory foods, electrolytes, nothing cortisol-spiking
+- "Late shift survival" = no sugar spikes, slow fuel, protect the next sleep window
+- "Stay sharp on deadline" = cognitive performance, nothing that makes you foggy
+- "Damage control" = stabilize from bad choices, prevent compounding, plan recovery
+
+━━━ SNAP / IMAGE ANALYSIS ━━━
+
+Quick Read and Damage Report modes:
+**Score:** [X]/10
+**Biggest asset:** [one phrase]
+**Main risk:** [one phrase]
+**Best adjustment:** [one specific change]
+**Situation read:** [environment type — gas station, hotel buffet, airport grab-and-go, etc.]
+**Crash risk:** [Low / Medium / High — one phrase why]
+**Focus support:** [how this helps or hurts focus, one phrase]
+**Sleep impact:** [only include if evening context or "need sleep soon" constraint is set]
+If score is 4 or below, begin your entire response with: BAD OPTIONS — damage control:
+
+Best Pick / menu mode:
+**Best pick:** [item] — [one sentence why]
+**Backup:** [item]
+**Skip:** [item] — [5 words max why]
+**Situation read:** [venue type and what it implies]
+**Crash risk:** [based on what they'll likely order]
+
+Rescue Meal / fridge mode:
+**Meal:** [name in 3 words max]
+**Steps:** [3 steps max, each one line]
+**Why it works:** [one line]
+**Situation read:** [what this fridge/pantry says about their situation]
+
+━━━ RULES ━━━
+
+- Never count calories. Never mention macros unless asked.
+- Never say "it's important to", "you should consider", "it depends" — just say what to do.
+- If options are genuinely bad: acknowledge it in one line, give the move.
+- No lectures. No preamble. No moralizing.
+
+━━━ TIME-OF-DAY INTELLIGENCE ━━━
+
+Before 9am: sustained energy, no sugar spikes, electrolytes if fatigued
+9am–2pm: cognitive performance window — prioritize protein + slow carbs
+2pm–6pm: counter the slump without adding caffeine dependency
+After 8pm, winding down: sleep-promoting foods, skip alcohol, nothing cortisol-spiking
+After 8pm, still working: clean protein + complex carbs, no sugar
+Post red-eye: electrolytes first, anti-inflammatory foods, nothing that spikes cortisol
+
+━━━ CALENDAR ━━━
 
 When calendar events are provided:
 - Reference upcoming events to time nutrition advice: "You have a press briefing in 90 minutes — eat now so you're not hungry mid-meeting"
 - Flag tight schedules: "You're booked solid 2–6pm — this window right now is your only real meal chance"
 - Spot gaps as eating opportunities
 
-Always remember and reference what the user has shared: location, energy level, upcoming schedule."""
+━━━ TONE ━━━
+
+Seasoned field producer who's been everywhere. Direct, calm, decided. Like telling a colleague what to eat before a live shot. You've seen all the bad options and you know what works."""
 
 
 # ── Calendar helpers ─────────────────────────────────────────────────────────
@@ -120,32 +202,48 @@ class ChatRequest(BaseModel):
     location: Optional[str] = None
     energy_level: Optional[str] = None
     calendar_events: Optional[List[dict]] = None
+    mission: Optional[str] = None
+    chat_mode: Optional[str] = None
+    constraints: Optional[List[str]] = None
 
 
 # ── Core routes ──────────────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
-    return {"status": "FieldFit API running"}
+    return {"status": "FieldFit API running", "version": "3.0"}
 
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     now = datetime.now()
-    context_parts = [f"Current time: {now.strftime('%I:%M %p on %A, %B %d')}"]
+
+    context_parts = [f"Time: {now.strftime('%I:%M %p on %A, %B %d')}"]
     if request.location:
-        context_parts.append(f"User location: {request.location}")
+        context_parts.append(f"Location: {request.location}")
     if request.energy_level and request.energy_level != "normal":
-        context_parts.append(f"User energy level: {request.energy_level}")
+        context_parts.append(f"Energy: {request.energy_level}")
     if request.calendar_events is not None:
         context_parts.append(f"Upcoming schedule: {format_events_for_context(request.calendar_events)}")
+    if request.mission:
+        context_parts.append(f"Active mission: {request.mission}")
+    if request.chat_mode:
+        context_parts.append(f"Mode: {request.chat_mode}")
+    if request.constraints:
+        constraints_str = ", ".join(request.constraints)
+        context_parts.append(f"Hard constraints: {constraints_str}")
+        if "need sleep soon" in request.constraints:
+            context_parts.append("SLEEP FLAG: always include Sleep impact note and TOMORROW → section")
 
-    context_note = f"\n[Context: {' | '.join(context_parts)}]"
+    context_str = " | ".join(context_parts)
 
-    api_messages = [{"role": m.role, "content": m.content} for m in request.messages]
+    api_messages = []
+    for msg in request.messages:
+        api_messages.append({"role": msg.role, "content": msg.content})
 
     if api_messages and api_messages[-1]["role"] == "user":
         last = api_messages[-1]
+        context_note = f"\n[Field context: {context_str}]"
         if isinstance(last["content"], str):
             last["content"] += context_note
         elif isinstance(last["content"], list):
@@ -157,7 +255,7 @@ async def chat(request: ChatRequest):
     try:
         response = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=800,
+            max_tokens=900,
             system=SYSTEM_PROMPT,
             messages=api_messages,
         )
@@ -175,30 +273,70 @@ async def analyze_food(
 ):
     image_data = await file.read()
     image_b64 = base64.standard_b64encode(image_data).decode("utf-8")
-    content_type = file.content_type or "image/jpeg"
-    if not content_type.startswith("image/"):
+
+    SUPPORTED_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+    content_type = file.content_type or ""
+    if content_type not in SUPPORTED_TYPES:
         content_type = "image/jpeg"
 
     now = datetime.now()
     time_str = now.strftime("%I:%M %p on %A")
 
+    scene_instruction = (
+        "Also include a scene-level read: "
+        "**Situation read:** [environment type in one phrase] | "
+        "**Crash risk:** [Low/Medium/High — one phrase why] | "
+        "**Focus support:** [one phrase on how this affects focus]"
+    )
+
     mode_prompts = {
-        "general": f"Analyze this food for a busy journalist eating on the go. Health rating 1-10. List 2-3 energy/cognition benefits. Give 1-2 specific next-time adjustments. Time: {time_str}.",
-        "menu":    f"This is a restaurant menu for a tired journalist who needs sustained energy. Name the 3 best options with one punchy sentence each on why. Flag 2 things to avoid. Time: {time_str}.",
-        "fridge":  f"This is a fridge/pantry for someone who is tired and has 15 minutes max. Suggest the best complete meal using what's visible. Exact ingredients + 3 steps. Time: {time_str}.",
-        "plate":   f"Analyze this meal. Health rating 1-10. What works well for sustained energy? What would you change? Any red flags? Time: {time_str}.",
+        "general": (
+            f"Quick Read field assessment. Time: {time_str}. "
+            "Use this exact structure: "
+            "**Score:** X/10 | **Biggest asset:** [one phrase] | "
+            "**Main risk:** [one phrase] | **Best adjustment:** [one specific action]. "
+            f"{scene_instruction}. "
+            "If score is 4 or below, begin your entire response with: BAD OPTIONS — damage control:"
+        ),
+        "menu": (
+            f"Best Pick analysis for a tired journalist. Time: {time_str}. "
+            "Use this exact structure: "
+            "**Best pick:** [item] — [one sentence why] | "
+            "**Backup:** [item] | "
+            "**Skip:** [item] — [5 words max why] | "
+            "**Situation read:** [venue type and what it implies for a journalist] | "
+            "**Crash risk:** [based on what they'll likely order]. "
+            "Be decisive — name one winner."
+        ),
+        "fridge": (
+            f"Rescue Meal assessment. Time: {time_str}. Tired person, 15 minutes max. "
+            "Use this exact structure: "
+            "**Meal:** [name in 3 words max] | "
+            "**Steps:** [3 steps max, each one line] | "
+            "**Why it works:** [one line] | "
+            "**Situation read:** [what this fridge says about their current state]. "
+            "Be realistic — not a chef, likely exhausted."
+        ),
+        "plate": (
+            f"Damage Report. Time: {time_str}. "
+            "Use this exact structure: "
+            "**Score:** X/10 | **Biggest asset:** [one phrase] | "
+            "**Main risk:** [one phrase] | **Best adjustment:** [one specific change for next time]. "
+            f"{scene_instruction}. "
+            "If score is 4 or below, begin your entire response with: BAD OPTIONS — damage control:"
+        ),
     }
 
     prompt = mode_prompts.get(mode, mode_prompts["general"])
     if location:
-        prompt += f" User is in/at: {location}."
+        prompt += f" User is at: {location}."
     if context:
         prompt += f" Additional context: {context}"
 
     try:
         response = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=700,
+            max_tokens=800,
             system=SYSTEM_PROMPT,
             messages=[{
                 "role": "user",
@@ -209,6 +347,26 @@ async def analyze_food(
             }],
         )
         return {"analysis": response.content[0].text, "mode": mode}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/quick-advice")
+async def quick_advice(scenario: str, location: Optional[str] = None):
+    now = datetime.now()
+    prompt = f"Scenario: {scenario}\nTime: {now.strftime('%I:%M %p on %A')}"
+    if location:
+        prompt += f"\nLocation: {location}"
+    prompt += "\n\nMake the call. Under 150 words. Lead with exactly what to do right now."
+
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=300,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return {"advice": response.content[0].text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

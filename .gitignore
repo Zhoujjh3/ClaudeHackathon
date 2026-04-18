@@ -2,3 +2,5 @@
 .env.example
 backend/credentials.json
 backend/token.json
+__pycache__/
+*.pyc
