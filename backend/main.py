@@ -1,14 +1,31 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import RedirectResponse
 from pydantic import BaseModel
 from typing import List, Optional, Union
 import anthropic
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Google Calendar — optional, only used if credentials.json is present
+try:
+    from google.auth.transport.requests import Request
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import Flow
+    from googleapiclient.discovery import build
+    GOOGLE_AVAILABLE = True
+except ImportError:
+    GOOGLE_AVAILABLE = False
+
+CREDENTIALS_FILE = os.path.join(os.path.dirname(__file__), "credentials.json")
+TOKEN_FILE       = os.path.join(os.path.dirname(__file__), "token.json")
+SCOPES           = ["https://www.googleapis.com/auth/calendar.readonly"]
+REDIRECT_URI     = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/calendar/callback")
+FRONTEND_URL     = os.getenv("FRONTEND_URL", "http://localhost:8000")
 
 app = FastAPI(title="FieldFit API", version="3.0")
 
@@ -140,6 +157,43 @@ class ChatRequest(BaseModel):
     mission: Optional[str] = None
     chat_mode: Optional[str] = None
     constraints: Optional[List[str]] = None
+    calendar_events: Optional[List[dict]] = None
+
+
+def get_calendar_service():
+    if not GOOGLE_AVAILABLE:
+        return None
+    if not os.path.exists(TOKEN_FILE):
+        return None
+    creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+    if creds and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+        with open(TOKEN_FILE, "w") as f:
+            f.write(creds.to_json())
+    if not creds or not creds.valid:
+        return None
+    return build("calendar", "v3", credentials=creds)
+
+
+def format_events_for_context(events: list) -> str:
+    if not events:
+        return "No upcoming events."
+    lines = []
+    for e in events:
+        start = e.get("start", {})
+        dt = start.get("dateTime", start.get("date", ""))
+        if dt:
+            try:
+                if "T" in dt:
+                    parsed = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+                    dt = parsed.strftime("%a %b %d, %I:%M %p")
+                else:
+                    parsed = datetime.strptime(dt, "%Y-%m-%d")
+                    dt = parsed.strftime("%a %b %d (all day)")
+            except Exception:
+                pass
+        lines.append(f"- {dt}: {e.get('summary', 'Untitled')}")
+    return "\n".join(lines)
 
 
 @app.get("/")
@@ -165,6 +219,9 @@ async def chat(request: ChatRequest):
         context_parts.append(f"Hard constraints: {constraints_str}")
         if "need sleep soon" in request.constraints:
             context_parts.append("SLEEP FLAG: always include Sleep impact note and TOMORROW → section")
+    if request.calendar_events:
+        events_str = format_events_for_context(request.calendar_events)
+        context_parts.append(f"Upcoming schedule:\n{events_str}")
 
     context_str = " | ".join(context_parts)
 
@@ -309,3 +366,63 @@ async def quick_advice(scenario: str, location: Optional[str] = None):
         return {"advice": response.content[0].text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Google Calendar routes ────────────────────────────────────────────────────
+
+@app.get("/api/calendar/status")
+def calendar_status():
+    if not GOOGLE_AVAILABLE:
+        return {"connected": False, "reason": "google libraries not installed"}
+    if not os.path.exists(CREDENTIALS_FILE):
+        return {"connected": False, "reason": "credentials.json missing"}
+    if not os.path.exists(TOKEN_FILE):
+        return {"connected": False, "reason": "not authenticated"}
+    svc = get_calendar_service()
+    return {"connected": svc is not None}
+
+
+@app.get("/api/calendar/connect")
+def calendar_connect():
+    if not GOOGLE_AVAILABLE or not os.path.exists(CREDENTIALS_FILE):
+        raise HTTPException(status_code=503, detail="Google Calendar not available")
+    flow = Flow.from_client_secrets_file(CREDENTIALS_FILE, scopes=SCOPES, redirect_uri=REDIRECT_URI)
+    auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
+    return RedirectResponse(auth_url)
+
+
+@app.get("/api/calendar/callback")
+def calendar_callback(code: str):
+    if not GOOGLE_AVAILABLE or not os.path.exists(CREDENTIALS_FILE):
+        raise HTTPException(status_code=503, detail="Google Calendar not available")
+    flow = Flow.from_client_secrets_file(CREDENTIALS_FILE, scopes=SCOPES, redirect_uri=REDIRECT_URI)
+    flow.fetch_token(code=code)
+    creds = flow.credentials
+    with open(TOKEN_FILE, "w") as f:
+        f.write(creds.to_json())
+    return RedirectResponse(f"{FRONTEND_URL}?cal=connected")
+
+
+@app.get("/api/calendar/events")
+def calendar_events():
+    svc = get_calendar_service()
+    if not svc:
+        raise HTTPException(status_code=401, detail="Calendar not connected")
+    now = datetime.now(timezone.utc).isoformat()
+    future = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+    result = svc.events().list(
+        calendarId="primary",
+        timeMin=now,
+        timeMax=future,
+        maxResults=10,
+        singleEvents=True,
+        orderBy="startTime",
+    ).execute()
+    return {"events": result.get("items", [])}
+
+
+@app.delete("/api/calendar/disconnect")
+def calendar_disconnect():
+    if os.path.exists(TOKEN_FILE):
+        os.remove(TOKEN_FILE)
+    return {"disconnected": True}

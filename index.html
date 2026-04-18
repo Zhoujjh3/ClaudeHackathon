@@ -779,6 +779,35 @@
       border-radius: var(--r-sm); padding: 11px 14px;
       font-size: 13px; color: var(--damage); line-height: 1.5;
     }
+
+    /* ── Calendar ── */
+    .cal-card {
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--r); padding: 14px 16px; display: flex;
+      flex-direction: column; gap: 10px;
+    }
+    .cal-header { display: flex; align-items: center; justify-content: space-between; }
+    .cal-status { font-size: 12px; color: var(--text-muted); }
+    .cal-status.connected { color: #4a7a40; }
+    .cal-btn {
+      font-family: var(--font); font-size: 12px; font-weight: 500;
+      padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+      cursor: pointer; background: var(--surface-alt); color: var(--text-soft);
+      transition: background .15s;
+    }
+    .cal-btn:hover { background: var(--surface-deep); }
+    .cal-btn.primary {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+    }
+    .cal-btn.primary:hover { background: var(--accent-hover); }
+    .cal-events { display: flex; flex-direction: column; gap: 6px; }
+    .cal-event {
+      display: flex; align-items: baseline; gap: 8px;
+      font-size: 12px; line-height: 1.4;
+    }
+    .cal-event-time { color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+    .cal-event-title { color: var(--text); }
+    .cal-empty { font-size: 12px; color: var(--text-faint); font-style: italic; }
   </style>
 </head>
 <body>
@@ -813,6 +842,22 @@
     <!-- ── BRIEF ─────────────────────────────────── -->
     <div id="panel-dashboard" class="panel active">
       <div class="scroll dashboard">
+
+        <!-- Calendar -->
+        <div class="db-section" id="cal-section">
+          <span class="eyebrow">Schedule</span>
+          <div class="cal-card">
+            <div class="cal-header">
+              <span class="cal-status" id="cal-status-text">Not connected</span>
+              <div style="display:flex;gap:6px">
+                <button class="cal-btn" id="cal-refresh-btn" style="display:none" onclick="refreshCalendar()">Refresh</button>
+                <button class="cal-btn" id="cal-disconnect-btn" style="display:none" onclick="calDisconnect()">Disconnect</button>
+                <button class="cal-btn primary" id="cal-connect-btn" onclick="calConnect()">Connect Google Calendar</button>
+              </div>
+            </div>
+            <div class="cal-events" id="cal-events-list" style="display:none"></div>
+          </div>
+        </div>
 
         <div class="db-section">
           <span class="eyebrow">Field status</span>
@@ -1043,7 +1088,7 @@
 
 </div>
 <script>
-  const API = 'http://localhost:8000';
+  const API = '';
 
   // ── State ──────────────────────────────────────────
   const S = {
@@ -1053,12 +1098,14 @@
     mission:     null,
     chatMode:    'Decide',
     constraints: new Set(),
-    messages:    [],
-    chatBusy:    false,
-    snapFile:    null,
-    snapMode:    'general',
-    snapBusy:    false,
-    lastCall:    null,   // { text, time, mode }
+    messages:         [],
+    chatBusy:         false,
+    snapFile:         null,
+    snapMode:         'general',
+    snapBusy:         false,
+    lastCall:         null,   // { text, time, mode }
+    calendarConnected: false,
+    calendarEvents:   null,
   };
 
   // ── Maps ───────────────────────────────────────────
@@ -1524,6 +1571,7 @@
       if (S.mission)             body.mission       = S.mission;
       if (S.chatMode)            body.chat_mode     = S.chatMode;
       if (S.constraints.size)   body.constraints   = [...S.constraints];
+      if (S.calendarEvents)     body.calendar_events = S.calendarEvents;
 
       const res = await fetch(API + '/api/chat', {
         method: 'POST',
@@ -1739,6 +1787,101 @@
       document.getElementById('analyze-label').textContent = 'Run Assessment';
     }
   });
+
+  // ── Calendar ───────────────────────────────────────
+  function renderCalendar() {
+    const statusEl = document.getElementById('cal-status-text');
+    const connectBtn = document.getElementById('cal-connect-btn');
+    const refreshBtn = document.getElementById('cal-refresh-btn');
+    const disconnectBtn = document.getElementById('cal-disconnect-btn');
+    const eventsList = document.getElementById('cal-events-list');
+
+    if (!S.calendarConnected) {
+      statusEl.textContent = 'Not connected';
+      statusEl.className = 'cal-status';
+      connectBtn.style.display = '';
+      refreshBtn.style.display = 'none';
+      disconnectBtn.style.display = 'none';
+      eventsList.style.display = 'none';
+      return;
+    }
+
+    statusEl.textContent = 'Connected';
+    statusEl.className = 'cal-status connected';
+    connectBtn.style.display = 'none';
+    refreshBtn.style.display = '';
+    disconnectBtn.style.display = '';
+    eventsList.style.display = '';
+
+    const events = S.calendarEvents || [];
+    if (events.length === 0) {
+      eventsList.innerHTML = '<span class="cal-empty">No events in the next 24 hours</span>';
+    } else {
+      eventsList.innerHTML = events.map(e => {
+        const start = e.start || {};
+        let dt = start.dateTime || start.date || '';
+        if (dt) {
+          try {
+            const d = new Date(dt);
+            if (start.dateTime) {
+              dt = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            } else {
+              dt = d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+            }
+          } catch (_) {}
+        }
+        return `<div class="cal-event">
+          <span class="cal-event-time">${dt}</span>
+          <span class="cal-event-title">${e.summary || 'Untitled'}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  async function fetchCalendarEvents() {
+    try {
+      const res = await fetch(API + '/api/calendar/events');
+      if (!res.ok) { S.calendarConnected = false; S.calendarEvents = null; renderCalendar(); return; }
+      const data = await res.json();
+      S.calendarEvents = data.events || [];
+      S.calendarConnected = true;
+      renderCalendar();
+    } catch (_) {}
+  }
+
+  async function refreshCalendar() {
+    document.getElementById('cal-refresh-btn').disabled = true;
+    await fetchCalendarEvents();
+    document.getElementById('cal-refresh-btn').disabled = false;
+  }
+
+  function calConnect() {
+    window.location.href = API + '/api/calendar/connect';
+  }
+
+  async function calDisconnect() {
+    await fetch(API + '/api/calendar/disconnect', { method: 'DELETE' });
+    S.calendarConnected = false;
+    S.calendarEvents = null;
+    renderCalendar();
+  }
+
+  // init: check calendar status + handle redirect param
+  (async function initCalendar() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('cal') === 'connected') {
+      window.history.replaceState({}, '', window.location.pathname);
+      await fetchCalendarEvents();
+      return;
+    }
+    try {
+      const res = await fetch(API + '/api/calendar/status');
+      const data = await res.json();
+      S.calendarConnected = data.connected;
+      if (data.connected) await fetchCalendarEvents();
+      else renderCalendar();
+    } catch (_) { renderCalendar(); }
+  })();
 
   // ── Init ───────────────────────────────────────────
   renderHeroCard();

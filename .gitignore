@@ -1,2 +1,4 @@
 .env
 .env.example
+backend/credentials.json
+backend/token.json
