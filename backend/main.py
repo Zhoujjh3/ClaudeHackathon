@@ -203,7 +203,7 @@ def root():
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    now = datetime.now()
+    now = datetime.now(timezone(timedelta(hours=-5)))
 
     context_parts = [f"Time: {now.strftime('%I:%M %p on %A, %B %d')}"]
     if request.location:
@@ -267,7 +267,7 @@ async def analyze_food(
     if content_type not in SUPPORTED_TYPES:
         content_type = "image/jpeg"
 
-    now = datetime.now()
+    now = datetime.now(timezone(timedelta(hours=-5)))
     time_str = now.strftime("%I:%M %p on %A")
 
     scene_instruction = (
@@ -350,7 +350,7 @@ async def analyze_food(
 
 @app.post("/api/quick-advice")
 async def quick_advice(scenario: str, location: Optional[str] = None):
-    now = datetime.now()
+    now = datetime.now(timezone(timedelta(hours=-5)))
     prompt = f"Scenario: {scenario}\nTime: {now.strftime('%I:%M %p on %A')}"
     if location:
         prompt += f"\nLocation: {location}"
