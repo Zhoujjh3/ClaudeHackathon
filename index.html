@@ -33,10 +33,11 @@
       --damage-bg:    #FDF0E6;
       --damage-border:#D4956A;
 
-      --r-sm:  8px;
-      --r:     12px;
-      --r-lg:  18px;
-      --r-xl:  24px;
+      --warn:         #7A5010;
+      --warn-bg:      #FDF5E0;
+      --warn-border:  #D4B86A;
+
+      --r-sm: 8px; --r: 12px; --r-lg: 18px; --r-xl: 24px;
 
       --shadow:    0 2px 8px rgba(58,30,10,.08), 0 1px 2px rgba(58,30,10,.05);
       --shadow-md: 0 6px 20px rgba(58,30,10,.12), 0 2px 6px rgba(58,30,10,.07);
@@ -91,21 +92,16 @@
       box-shadow: 0 2px 8px rgba(58,30,10,.3);
     }
 
-    .logo span {
-      font-weight: 700; font-size: 11px; color: var(--bg); letter-spacing: .05em;
-    }
+    .logo span { font-weight: 700; font-size: 11px; color: var(--bg); letter-spacing: .05em; }
 
     .brand-name  { font-weight: 700; font-size: 17px; letter-spacing: -.02em; }
     .brand-byline { font-size: 10px; font-weight: 300; color: var(--text-muted); margin-left: 4px; }
 
     .header-clock {
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--text-muted);
-      background: var(--surface);
+      font-family: var(--mono); font-size: 12px;
+      color: var(--text-muted); background: var(--surface);
       border: 1px solid var(--border-soft);
-      padding: 5px 11px;
-      border-radius: 20px;
+      padding: 5px 11px; border-radius: 20px;
     }
 
     /* ── Situation Strip ───────────────────────────── */
@@ -116,7 +112,6 @@
       padding: 7px 20px;
       display: flex;
       align-items: center;
-      gap: 0;
       font-size: 11.5px;
       color: var(--text-muted);
       min-height: 34px;
@@ -124,46 +119,26 @@
     }
 
     .strip-items {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex: 1;
-      overflow: hidden;
-      white-space: nowrap;
+      display: flex; align-items: center;
+      gap: 6px; flex: 1;
+      overflow: hidden; white-space: nowrap;
     }
 
-    .strip-dot {
-      width: 3px; height: 3px;
-      border-radius: 50%;
-      background: var(--border);
-      flex-shrink: 0;
-    }
-
+    .strip-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
     .strip-loc  { color: var(--text-soft); font-weight: 500; }
     .strip-time { font-family: var(--mono); font-size: 11px; }
     .strip-energy { color: var(--text-soft); font-style: italic; }
 
     .strip-mission {
       flex-shrink: 0;
-      background: var(--accent);
-      color: var(--bg);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: .02em;
-      padding: 3px 9px;
-      border-radius: 10px;
-      margin-left: 8px;
-      white-space: nowrap;
+      background: var(--accent); color: var(--bg);
+      font-size: 10px; font-weight: 600; letter-spacing: .02em;
+      padding: 3px 9px; border-radius: 10px;
+      margin-left: 8px; white-space: nowrap;
     }
 
     /* ── Main / Panels ─────────────────────────────── */
-    .main {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
+    .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
     .panel.active { display: flex; }
 
@@ -171,8 +146,7 @@
     .nav { flex-shrink: 0; border-top: 1px solid var(--border-soft); background: var(--bg); display: flex; }
 
     .nav-btn {
-      flex: 1;
-      padding: 9px 4px 12px;
+      flex: 1; padding: 9px 4px 12px;
       display: flex; flex-direction: column; align-items: center; gap: 4px;
       background: none; border: none; cursor: pointer;
       color: var(--text-muted); font-family: var(--font);
@@ -198,7 +172,7 @@
       color: var(--text-muted);
     }
 
-    /* ── Field / Input ──────────────────────────────── */
+    /* ── Shared inputs ──────────────────────────────── */
     .field { display: flex; flex-direction: column; gap: 5px; }
     .field label { font-size: 12px; font-weight: 500; color: var(--text-soft); }
 
@@ -217,84 +191,103 @@
     }
 
     .field input::placeholder { color: var(--text-faint); font-style: italic; font-weight: 300; }
-
     .field input:focus, .field select:focus {
       border-color: var(--accent-mid);
       box-shadow: 0 0 0 3px rgba(58,30,10,.07);
     }
 
     /* ══════════════════════════════════════════════════
-       DASHBOARD — FIELD BRIEF
+       BRIEF (DASHBOARD)
     ══════════════════════════════════════════════════ */
     .dashboard { padding: 20px 20px 36px; }
-
     .db-section { margin-bottom: 24px; }
     .db-section:last-child { margin-bottom: 0; }
-
     .db-section .eyebrow { display: block; margin-bottom: 11px; }
-
     .context-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
     /* Hero card */
     .hero-card {
-      background: var(--accent);
-      color: var(--bg);
-      border-radius: var(--r-lg);
-      padding: 20px 20px 18px;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow-md);
-      position: relative;
-      overflow: hidden;
+      background: var(--accent); color: var(--bg);
+      border-radius: var(--r-lg); padding: 20px 20px 18px;
+      margin-bottom: 6px;
+      box-shadow: var(--shadow-md); position: relative; overflow: hidden;
     }
 
     .hero-card::before {
-      content: '';
-      position: absolute;
-      top: -20px; right: -20px;
-      width: 100px; height: 100px;
-      border-radius: 50%;
+      content: ''; position: absolute; top: -24px; right: -24px;
+      width: 110px; height: 110px; border-radius: 50%;
       background: rgba(255,255,255,.04);
     }
 
+    .hero-tag {
+      display: inline-block; font-size: 9px; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      opacity: .5; margin-bottom: 10px;
+    }
+
     .hero-headline {
-      font-size: 18px;
-      font-weight: 700;
-      line-height: 1.25;
-      letter-spacing: -.02em;
+      font-size: 18px; font-weight: 700;
+      line-height: 1.25; letter-spacing: -.02em;
       margin-bottom: 8px;
     }
 
-    .hero-sub {
-      font-size: 13px;
-      font-weight: 300;
-      line-height: 1.6;
-      opacity: .78;
+    .hero-sub { font-size: 13px; font-weight: 300; line-height: 1.6; opacity: .78; }
+
+    /* Last call preview */
+    .last-call {
+      background: var(--surface);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--r);
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
     }
 
-    .hero-tag {
-      display: inline-block;
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      opacity: .5;
-      margin-bottom: 10px;
+    .last-call-left { flex: 1; min-width: 0; }
+
+    .last-call-label {
+      font-size: 9px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--text-faint);
+      margin-bottom: 4px;
     }
+
+    .last-call-text {
+      font-size: 12.5px; color: var(--text-soft);
+      line-height: 1.4;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .last-call-cta {
+      flex-shrink: 0;
+      background: var(--accent-light);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 5px 10px;
+      font-family: var(--font);
+      font-size: 11px; font-weight: 600;
+      color: var(--accent-mid);
+      cursor: pointer;
+      transition: background .12s;
+      white-space: nowrap;
+    }
+
+    .last-call-cta:hover { background: var(--surface-alt); }
 
     /* Mission chips */
-    .mission-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+    .mission-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; }
     .mission-row::-webkit-scrollbar { display: none; }
 
     .mission-chip {
-      display: flex; align-items: center; gap: 5px;
-      padding: 7px 14px;
-      border-radius: 20px;
-      border: 1px solid var(--border-soft);
-      background: var(--surface);
-      font-family: var(--font);
-      font-size: 12px; font-weight: 500;
-      color: var(--text-soft);
-      cursor: pointer; white-space: nowrap;
+      padding: 7px 13px; border-radius: 20px;
+      border: 1px solid var(--border-soft); background: var(--surface);
+      font-family: var(--font); font-size: 12px; font-weight: 500;
+      color: var(--text-soft); cursor: pointer; white-space: nowrap;
       transition: all .15s;
     }
 
@@ -302,26 +295,21 @@
     .mission-chip.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
     .mission-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-    /* Scenario dispatch cards */
+    /* Scenario cards */
     .scenarios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     .scenario-card {
-      background: var(--surface);
-      border: 1px solid var(--border-soft);
-      border-radius: var(--r-lg);
-      padding: 14px 13px 13px;
-      text-align: left; font-family: var(--font);
-      cursor: pointer;
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--r-lg); padding: 14px 13px 13px;
+      text-align: left; font-family: var(--font); cursor: pointer;
       display: flex; flex-direction: column; gap: 6px;
       box-shadow: var(--shadow);
       transition: transform .12s, box-shadow .12s, border-color .12s, background .12s;
     }
 
     .scenario-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--border);
-      background: var(--accent-light);
+      transform: translateY(-2px); box-shadow: var(--shadow-md);
+      border-color: var(--border); background: var(--accent-light);
     }
 
     .scenario-card:active { transform: translateY(0); box-shadow: var(--shadow); }
@@ -332,13 +320,11 @@
     .sc-desc  { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
 
     /* ══════════════════════════════════════════════════
-       COACH — FIELD ADVISOR
+       CALL (COACH)
     ══════════════════════════════════════════════════ */
     .chat-msgs {
-      flex: 1; min-height: 0;
-      overflow-y: auto;
-      padding: 18px;
-      display: flex; flex-direction: column; gap: 14px;
+      flex: 1; min-height: 0; overflow-y: auto;
+      padding: 18px; display: flex; flex-direction: column; gap: 14px;
     }
 
     .chat-msgs::-webkit-scrollbar { width: 3px; }
@@ -346,50 +332,36 @@
 
     /* Empty state */
     .chat-empty {
-      flex: 1;
-      display: flex; flex-direction: column;
+      flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      text-align: center;
-      padding: 36px 20px;
-      gap: 10px;
+      text-align: center; padding: 36px 20px; gap: 10px;
     }
 
     .chat-empty-icon {
-      width: 58px; height: 58px;
-      border-radius: 18px;
-      background: var(--surface);
-      border: 1px solid var(--border-soft);
+      width: 58px; height: 58px; border-radius: 18px;
+      background: var(--surface); border: 1px solid var(--border-soft);
       display: flex; align-items: center; justify-content: center;
-      font-size: 26px;
-      margin-bottom: 4px;
+      font-size: 26px; margin-bottom: 4px;
     }
 
     .chat-empty h3 { font-size: 16px; font-weight: 600; color: var(--text-soft); }
-    .chat-empty p  { font-size: 13px; color: var(--text-muted); max-width: 250px; line-height: 1.5; }
+    .chat-empty p  { font-size: 13px; color: var(--text-muted); max-width: 240px; line-height: 1.5; }
 
     .suggestions { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; width: 100%; max-width: 300px; }
 
     .suggestion {
-      background: var(--surface);
-      border: 1px solid var(--border-soft);
-      border-radius: var(--r);
-      padding: 10px 14px;
-      font-family: var(--font);
-      font-size: 13px; font-weight: 400;
-      color: var(--text-soft);
-      cursor: pointer; text-align: left;
-      transition: background .12s, border-color .12s;
-      line-height: 1.4;
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--r); padding: 10px 14px;
+      font-family: var(--font); font-size: 13px; font-weight: 400;
+      color: var(--text-soft); cursor: pointer; text-align: left;
+      transition: background .12s, border-color .12s; line-height: 1.4;
     }
 
     .suggestion:hover { background: var(--accent-light); border-color: var(--border); }
     .suggestion:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     /* Messages */
-    .msg {
-      display: flex; align-items: flex-start; gap: 9px;
-      animation: msgIn .18s ease-out;
-    }
+    .msg { display: flex; align-items: flex-start; gap: 9px; animation: msgIn .18s ease-out; }
 
     @keyframes msgIn {
       from { opacity: 0; transform: translateY(5px); }
@@ -399,46 +371,34 @@
     .msg.user { flex-direction: row-reverse; }
 
     .msg-av {
-      width: 27px; height: 27px;
-      border-radius: 8px;
-      background: var(--accent);
-      color: var(--bg);
+      width: 27px; height: 27px; border-radius: 8px;
+      background: var(--accent); color: var(--bg);
       display: flex; align-items: center; justify-content: center;
       font-size: 9px; font-weight: 700; letter-spacing: .04em;
       flex-shrink: 0; margin-top: 2px;
     }
 
-    .msg-body { max-width: 82%; display: flex; flex-direction: column; }
+    .msg-body { max-width: 84%; display: flex; flex-direction: column; }
     .msg.user .msg-body { align-items: flex-end; }
 
-    .bubble {
-      padding: 10px 14px;
-      font-size: 14px; line-height: 1.65;
-      border-radius: var(--r);
-    }
+    .bubble { padding: 10px 14px; font-size: 14px; line-height: 1.65; border-radius: var(--r); }
 
     .msg.ai .bubble {
-      background: var(--surface);
-      border: 1px solid var(--border-soft);
-      color: var(--text);
-      border-radius: 4px var(--r) var(--r) var(--r);
+      background: var(--surface); border: 1px solid var(--border-soft);
+      color: var(--text); border-radius: 4px var(--r) var(--r) var(--r);
     }
 
     .msg.ai .bubble.mode-decide {
-      border-left: 3px solid var(--accent-mid);
-      padding-left: 12px;
+      border-left: 3px solid var(--accent-mid); padding-left: 12px;
     }
 
     .msg.ai .bubble.mode-damage {
-      background: var(--damage-bg);
-      border-color: var(--damage-border);
-      border-left: 3px solid var(--damage);
-      padding-left: 12px;
+      background: var(--damage-bg); border-color: var(--damage-border);
+      border-left: 3px solid var(--damage); padding-left: 12px;
     }
 
     .msg.user .bubble {
-      background: var(--accent);
-      color: var(--bg);
+      background: var(--accent); color: var(--bg);
       border-radius: var(--r) 4px var(--r) var(--r);
     }
 
@@ -450,25 +410,18 @@
     .msg.user .msg-time { text-align: right; }
 
     /* Markdown in bubbles */
-    .bubble p             { margin-bottom: 6px; }
-    .bubble p:last-child  { margin-bottom: 0; }
-    .bubble strong        { font-weight: 600; }
+    .bubble p { margin-bottom: 6px; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .bubble strong { font-weight: 600; }
     .bubble ul, .bubble ol { padding-left: 18px; margin-bottom: 6px; }
-    .bubble li            { margin-bottom: 3px; }
-    .bubble code {
-      font-family: var(--mono); font-size: .88em;
-      background: var(--surface-alt); padding: 1px 5px; border-radius: 4px;
-    }
+    .bubble li { margin-bottom: 3px; }
+    .bubble code { font-family: var(--mono); font-size: .88em; background: var(--surface-alt); padding: 1px 5px; border-radius: 4px; }
     .msg.user .bubble code { background: rgba(255,255,255,.15); }
 
-    /* Decision sections in structured AI responses */
-    .decision-block {
-      display: flex; flex-direction: column; gap: 8px;
-    }
+    /* Decision card sections */
+    .decision-block { display: flex; flex-direction: column; gap: 10px; }
 
-    .dsec {
-      display: flex; flex-direction: column; gap: 2px;
-    }
+    .dsec { display: flex; flex-direction: column; gap: 2px; }
 
     .dsec-label {
       font-size: 9px; font-weight: 700; letter-spacing: .1em;
@@ -480,13 +433,63 @@
     .dsec-body { font-size: 14px; color: var(--text); line-height: 1.5; }
     .dsec-body strong { font-weight: 600; }
 
+    /* Time horizon section */
+    .time-horizon {
+      margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid var(--border-soft);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .th-item { display: flex; gap: 10px; align-items: baseline; }
+
+    .th-label {
+      font-size: 9px; font-weight: 700; letter-spacing: .09em;
+      text-transform: uppercase; color: var(--text-faint);
+      white-space: nowrap; flex-shrink: 0; width: 72px;
+    }
+
+    .th-body { font-size: 13px; color: var(--text-soft); line-height: 1.5; }
+
+    /* Stack warning */
+    .stack-warning {
+      background: var(--warn-bg); border: 1px solid var(--warn-border);
+      border-radius: var(--r-sm); padding: 8px 12px;
+      font-size: 13px; color: var(--warn);
+      margin-top: 8px; line-height: 1.4;
+    }
+
+    /* System note */
+    .system-note {
+      text-align: center; font-size: 11px; color: var(--text-faint);
+      font-style: italic; padding: 2px 0;
+      animation: msgIn .18s ease-out;
+    }
+
+    /* Follow-up chips */
+    .followup-row {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding: 2px 0 6px 36px;
+      animation: msgIn .2s ease-out;
+    }
+
+    .fup {
+      padding: 6px 12px; border-radius: 16px;
+      border: 1px solid var(--border-soft);
+      background: var(--accent-xlight);
+      font-family: var(--font); font-size: 12px; font-weight: 500;
+      color: var(--accent-mid); cursor: pointer;
+      transition: all .15s; white-space: nowrap;
+    }
+
+    .fup:hover { background: var(--accent-light); border-color: var(--border); color: var(--text-soft); }
+    .fup:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
     /* Typing dots */
     .typing { display: flex; gap: 4px; align-items: center; padding: 3px 2px; }
 
     .dot {
       width: 6px; height: 6px; border-radius: 50%;
-      background: var(--text-faint);
-      animation: bounce 1.2s ease-in-out infinite;
+      background: var(--text-faint); animation: bounce 1.2s ease-in-out infinite;
     }
 
     .dot:nth-child(2) { animation-delay: .18s; }
@@ -497,17 +500,12 @@
       40%         { transform: translateY(-5px); opacity: 1; }
     }
 
-    /* Mode toggle toolbar */
-    .coach-toolbar {
-      flex-shrink: 0;
-      border-top: 1px solid var(--border-soft);
-      background: var(--bg);
-    }
+    /* Coach toolbar */
+    .coach-toolbar { flex-shrink: 0; border-top: 1px solid var(--border-soft); background: var(--bg); }
 
     .mode-row {
       display: flex; align-items: center;
-      padding: 9px 14px 0;
-      gap: 6px;
+      padding: 9px 14px 9px; gap: 6px;
     }
 
     .mode-row-label {
@@ -517,14 +515,10 @@
     }
 
     .mchip {
-      padding: 5px 12px;
-      border-radius: 20px;
-      border: 1px solid var(--border-soft);
-      background: var(--surface);
-      font-family: var(--font);
-      font-size: 12px; font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer; white-space: nowrap;
+      padding: 5px 12px; border-radius: 20px;
+      border: 1px solid var(--border-soft); background: var(--surface);
+      font-family: var(--font); font-size: 12px; font-weight: 500;
+      color: var(--text-muted); cursor: pointer; white-space: nowrap;
       transition: all .15s;
     }
 
@@ -534,39 +528,27 @@
     .mchip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .constraint-toggle-btn {
-      margin-left: auto;
-      font-family: var(--font);
-      font-size: 11px; font-weight: 500;
-      color: var(--text-muted);
+      margin-left: auto; font-family: var(--font);
+      font-size: 11px; font-weight: 500; color: var(--text-muted);
       background: none; border: none; cursor: pointer;
       display: flex; align-items: center; gap: 4px;
       padding: 4px 6px; border-radius: 6px;
-      transition: color .15s, background .15s;
-      white-space: nowrap;
+      transition: color .15s, background .15s; white-space: nowrap;
     }
 
     .constraint-toggle-btn:hover { color: var(--text-soft); background: var(--surface); }
     .constraint-toggle-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .constraint-count {
-      background: var(--accent);
-      color: var(--bg);
+      background: var(--accent); color: var(--bg);
       font-size: 9px; font-weight: 700;
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      display: none;
-      align-items: center; justify-content: center;
+      width: 16px; height: 16px; border-radius: 50%;
+      display: none; align-items: center; justify-content: center;
     }
 
     .constraint-count.visible { display: flex; }
 
-    /* Constraints panel */
-    .constraints-panel {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height .22s ease, padding .22s ease;
-    }
-
+    .constraints-panel { max-height: 0; overflow: hidden; transition: max-height .22s ease; }
     .constraints-panel.open { max-height: 120px; }
 
     .constraints-inner {
@@ -577,42 +559,27 @@
     }
 
     .cchip {
-      padding: 5px 11px;
-      border-radius: 16px;
-      border: 1px solid var(--border-soft);
-      background: var(--bg);
-      font-family: var(--font);
-      font-size: 11.5px; font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all .15s;
+      padding: 5px 11px; border-radius: 16px;
+      border: 1px solid var(--border-soft); background: var(--bg);
+      font-family: var(--font); font-size: 11.5px; font-weight: 500;
+      color: var(--text-muted); cursor: pointer; transition: all .15s;
     }
 
     .cchip:hover { border-color: var(--border); color: var(--text-soft); }
-
-    .cchip.active {
-      background: var(--surface-alt);
-      border-color: var(--accent-mid);
-      color: var(--text);
-    }
-
+    .cchip.active { background: var(--surface-alt); border-color: var(--accent-mid); color: var(--text); }
     .cchip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     /* Chat input */
     .chat-input-row {
-      flex-shrink: 0;
-      border-top: 1px solid var(--border-soft);
+      flex-shrink: 0; border-top: 1px solid var(--border-soft);
       padding: 10px 14px 12px;
       display: flex; align-items: flex-end; gap: 9px;
       background: var(--bg);
     }
 
     .input-wrap {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border-soft);
-      border-radius: var(--r-xl);
-      padding: 9px 14px;
+      flex: 1; background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--r-xl); padding: 9px 14px;
       transition: border-color .15s, box-shadow .15s;
     }
 
@@ -622,21 +589,18 @@
     }
 
     #chat-input {
-      width: 100%;
-      font-family: var(--font); font-size: 14px; color: var(--text);
+      width: 100%; font-family: var(--font); font-size: 14px; color: var(--text);
       background: transparent; border: none; outline: none;
       resize: none; line-height: 1.5;
-      min-height: 21px; max-height: 100px;
-      overflow-y: auto; display: block;
+      min-height: 21px; max-height: 100px; overflow-y: auto; display: block;
     }
 
     #chat-input::placeholder { color: var(--text-faint); font-style: italic; font-weight: 300; }
 
     .send-btn {
-      width: 38px; height: 38px;
-      border-radius: 11px; background: var(--accent); border: none;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
+      width: 38px; height: 38px; border-radius: 11px;
+      background: var(--accent); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       box-shadow: 0 2px 8px rgba(58,30,10,.22);
       transition: background .15s, transform .1s, opacity .15s;
     }
@@ -648,70 +612,50 @@
     .send-btn svg { width: 16px; height: 16px; color: var(--bg); }
 
     /* ══════════════════════════════════════════════════
-       SNAP — FIELD ASSESSMENT
+       ASSESS (SNAP)
     ══════════════════════════════════════════════════ */
     .snap { padding: 18px 18px 36px; display: flex; flex-direction: column; gap: 18px; }
 
     .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: var(--r-lg);
-      padding: 34px 20px;
-      text-align: center; cursor: pointer;
-      background: var(--surface);
-      position: relative; overflow: hidden;
+      border: 2px dashed var(--border); border-radius: var(--r-lg);
+      padding: 34px 20px; text-align: center; cursor: pointer;
+      background: var(--surface); position: relative; overflow: hidden;
       transition: border-color .15s, background .15s;
     }
 
     .upload-zone:hover, .upload-zone.drag-over {
-      border-color: var(--accent-mid);
-      background: var(--accent-light);
+      border-color: var(--accent-mid); background: var(--accent-light);
     }
 
     .upload-zone input[type="file"] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer;
-      width: 100%; height: 100%;
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
     }
 
     .upload-icon { font-size: 28px; margin-bottom: 9px; opacity: .6; }
     .upload-zone h4 { font-size: 14px; font-weight: 600; color: var(--text-soft); margin-bottom: 3px; }
     .upload-zone p  { font-size: 12px; color: var(--text-muted); }
 
-    .img-preview {
-      border-radius: var(--r);
-      overflow: hidden;
-      border: 1px solid var(--border-soft);
-      position: relative;
-    }
-
-    .img-preview img {
-      width: 100%; max-height: 220px; object-fit: cover; display: block;
-    }
+    .img-preview { border-radius: var(--r); overflow: hidden; border: 1px solid var(--border-soft); position: relative; }
+    .img-preview img { width: 100%; max-height: 220px; object-fit: cover; display: block; }
 
     .remove-btn {
-      position: absolute; top: 8px; right: 8px;
-      width: 28px; height: 28px; border-radius: 8px;
-      background: rgba(28,15,6,.72); border: none; cursor: pointer;
+      position: absolute; top: 8px; right: 8px; width: 28px; height: 28px;
+      border-radius: 8px; background: rgba(28,15,6,.72); border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      color: var(--bg); font-size: 13px; font-weight: 700;
-      transition: background .15s;
+      color: var(--bg); font-size: 13px; font-weight: 700; transition: background .15s;
     }
 
     .remove-btn:hover { background: rgba(28,15,6,.92); }
 
-    /* Snap modes */
+    /* Snap mode chips */
     .snap-mode-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; }
     .snap-mode-row::-webkit-scrollbar { display: none; }
 
     .snap-chip {
-      display: flex; align-items: center; gap: 5px;
-      padding: 7px 13px;
-      border-radius: 20px;
-      border: 1px solid var(--border-soft);
-      background: var(--surface);
-      font-family: var(--font);
-      font-size: 12.5px; font-weight: 500;
-      color: var(--text-soft);
-      cursor: pointer; white-space: nowrap;
+      padding: 7px 13px; border-radius: 20px;
+      border: 1px solid var(--border-soft); background: var(--surface);
+      font-family: var(--font); font-size: 12.5px; font-weight: 500;
+      color: var(--text-soft); cursor: pointer; white-space: nowrap;
       transition: all .15s;
     }
 
@@ -720,13 +664,11 @@
     .snap-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .mode-desc {
-      font-size: 12px; color: var(--text-muted);
-      font-style: italic; font-weight: 300;
-      padding: 0 2px;
-      min-height: 18px;
+      font-size: 12px; color: var(--text-muted); font-style: italic;
+      font-weight: 300; padding: 0 2px; min-height: 18px;
     }
 
-    /* Snap fields */
+    /* Snap form field */
     .snap-field { display: flex; flex-direction: column; gap: 5px; }
     .snap-field label { font-size: 12px; font-weight: 500; color: var(--text-soft); }
 
@@ -738,20 +680,14 @@
     }
 
     .snap-field input::placeholder { color: var(--text-faint); font-style: italic; font-weight: 300; }
-
-    .snap-field input:focus {
-      border-color: var(--accent-mid);
-      box-shadow: 0 0 0 3px rgba(58,30,10,.07);
-    }
+    .snap-field input:focus { border-color: var(--accent-mid); box-shadow: 0 0 0 3px rgba(58,30,10,.07); }
 
     /* Analyze button */
     .analyze-btn {
-      width: 100%;
-      padding: 13px 20px;
+      width: 100%; padding: 13px 20px;
       background: var(--accent); color: var(--bg); border: none;
-      border-radius: var(--r);
-      font-family: var(--font); font-size: 15px; font-weight: 600;
-      cursor: pointer;
+      border-radius: var(--r); font-family: var(--font);
+      font-size: 15px; font-weight: 600; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px;
       box-shadow: 0 3px 12px rgba(58,30,10,.22);
       transition: background .15s, transform .1s, opacity .15s;
@@ -762,72 +698,49 @@
     .analyze-btn:disabled { opacity: .4; cursor: default; }
     .analyze-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-    /* Field Assessment result card */
+    /* Result card */
     .result-card {
-      background: var(--surface);
-      border: 1px solid var(--border-soft);
-      border-radius: var(--r-lg);
-      overflow: hidden;
-      box-shadow: var(--shadow);
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow);
     }
 
     .result-header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 18px 12px;
-      border-bottom: 1px solid var(--border-soft);
+      padding: 13px 18px 11px; border-bottom: 1px solid var(--border-soft);
     }
 
     .result-title { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--text-muted); }
+    .result-badge { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-muted); background: var(--surface-alt); padding: 3px 9px; border-radius: 10px; }
 
-    .result-badge {
-      font-size: 10px; font-weight: 600; letter-spacing: .07em;
-      text-transform: uppercase; color: var(--text-muted);
-      background: var(--surface-alt);
-      padding: 3px 9px; border-radius: 10px;
-    }
-
-    /* Bad options variant */
-    .result-card.bad-options {
-      border-color: var(--damage-border);
-    }
-
-    .result-card.bad-options .result-header {
-      background: var(--damage-bg);
-      border-bottom-color: var(--damage-border);
-    }
-
+    .result-card.bad-options { border-color: var(--damage-border); }
+    .result-card.bad-options .result-header { background: var(--damage-bg); border-bottom-color: var(--damage-border); }
     .result-card.bad-options .result-title { color: var(--damage); }
 
     /* Assessment sections */
     .assessment-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
-
     .asec { display: flex; flex-direction: column; gap: 3px; }
-
-    .asec-label {
-      font-size: 9px; font-weight: 700; letter-spacing: .12em;
-      text-transform: uppercase; color: var(--text-faint);
-    }
-
+    .asec-label { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
     .result-card.bad-options .asec-label { color: var(--damage); opacity: .6; }
-
     .asec-value { font-size: 14px; line-height: 1.55; color: var(--text); }
     .asec-value strong { font-weight: 600; }
 
-    .score-display {
-      font-family: var(--mono);
-      font-size: 26px; font-weight: 500;
-      color: var(--accent);
-      line-height: 1;
-    }
-
+    .score-display { font-family: var(--mono); font-size: 26px; font-weight: 500; color: var(--accent); line-height: 1; }
     .result-card.bad-options .score-display { color: var(--damage); }
 
-    /* Fallback markdown result */
-    .result-body {
-      padding: 16px 18px;
-      font-size: 14px; line-height: 1.72; color: var(--text);
+    /* Scene divider in Snap results */
+    .scene-divider {
+      border: none; border-top: 1px solid var(--border-soft);
+      margin: 4px 0;
     }
 
+    .scene-section-label {
+      font-size: 9px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--text-faint);
+      padding-top: 4px; margin-bottom: 8px;
+    }
+
+    /* Fallback result body */
+    .result-body { padding: 16px 18px; font-size: 14px; line-height: 1.72; color: var(--text); }
     .result-body p { margin-bottom: 8px; }
     .result-body p:last-child { margin-bottom: 0; }
     .result-body strong { font-weight: 600; }
@@ -837,27 +750,33 @@
     /* Loading */
     .loading-row {
       display: flex; align-items: center; gap: 12px;
-      padding: 22px 18px;
-      color: var(--text-muted); font-size: 13px; font-style: italic;
+      padding: 22px 18px; color: var(--text-muted); font-size: 13px; font-style: italic;
     }
 
     .spinner {
-      width: 18px; height: 18px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent-mid);
-      border-radius: 50%;
-      animation: spin .75s linear infinite;
-      flex-shrink: 0;
+      width: 18px; height: 18px; border: 2px solid var(--border);
+      border-top-color: var(--accent-mid); border-radius: 50%;
+      animation: spin .75s linear infinite; flex-shrink: 0;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* New photo button */
+    .new-photo-btn {
+      width: 100%; padding: 11px 20px;
+      background: var(--surface); color: var(--text-soft);
+      border: 1px solid var(--border-soft); border-radius: var(--r);
+      font-family: var(--font); font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: background .12s, border-color .12s;
+      margin-top: 12px;
+    }
+
+    .new-photo-btn:hover { background: var(--accent-light); border-color: var(--border); }
+
     /* Error */
     .error-banner {
-      background: #FBF0E8;
-      border: 1px solid var(--damage-border);
-      border-radius: var(--r-sm);
-      padding: 11px 14px;
+      background: #FBF0E8; border: 1px solid var(--damage-border);
+      border-radius: var(--r-sm); padding: 11px 14px;
       font-size: 13px; color: var(--damage); line-height: 1.5;
     }
   </style>
@@ -871,13 +790,13 @@
       <div class="logo"><span>FF</span></div>
       <div>
         <span class="brand-name">FieldFit</span>
-        <span class="brand-byline">field companion</span>
+        <span class="brand-byline">field decision system</span>
       </div>
     </div>
     <div class="header-clock" id="clock">--:--</div>
   </header>
 
-  <!-- Situation Strip (Steps 2) -->
+  <!-- Situation Strip -->
   <div class="situation-strip" id="situation-strip">
     <div class="strip-items">
       <span class="strip-loc" id="strip-loc">No location</span>
@@ -889,14 +808,12 @@
     <span class="strip-mission" id="strip-mission" style="display:none"></span>
   </div>
 
-  <!-- Main -->
   <main class="main">
 
-    <!-- ── DASHBOARD — Field Brief (Step 3) ── -->
+    <!-- ── BRIEF ─────────────────────────────────── -->
     <div id="panel-dashboard" class="panel active">
       <div class="scroll dashboard">
 
-        <!-- Context inputs -->
         <div class="db-section">
           <span class="eyebrow">Field status</span>
           <div class="context-grid">
@@ -905,7 +822,7 @@
               <input id="loc-input" type="text" placeholder="Airport, hotel…" autocomplete="off">
             </div>
             <div class="field">
-              <label for="energy-sel">Energy level</label>
+              <label for="energy-sel">Energy</label>
               <select id="energy-sel">
                 <option value="normal">Normal</option>
                 <option value="low">Low</option>
@@ -917,22 +834,32 @@
           </div>
         </div>
 
-        <!-- Hero card (dynamic) -->
+        <!-- Hero card -->
         <div class="hero-card" id="hero-card">
           <span class="hero-tag">Field Brief</span>
           <div class="hero-headline" id="hero-headline">Reading your situation…</div>
           <div class="hero-sub" id="hero-sub"></div>
         </div>
 
-        <!-- Mission selector -->
+        <!-- Last call preview (hidden until used) -->
+        <div class="last-call" id="last-call" style="display:none">
+          <div class="last-call-left">
+            <div class="last-call-label" id="last-call-label">Last call</div>
+            <div class="last-call-text" id="last-call-text"></div>
+          </div>
+          <button class="last-call-cta" id="last-call-cta">Resume →</button>
+        </div>
+
+        <!-- Missions -->
         <div class="db-section">
           <span class="eyebrow">Active mission</span>
           <div class="mission-row">
-            <button class="mission-chip" data-mission="Survive the Airport">✈️ Survive the Airport</button>
-            <button class="mission-chip" data-mission="Avoid the 3PM Crash">⏱ Avoid the 3PM Crash</button>
-            <button class="mission-chip" data-mission="Recover from Bad Sleep">😴 Recover from Bad Sleep</button>
-            <button class="mission-chip" data-mission="Late Shift Survival">🌙 Late Shift Survival</button>
-            <button class="mission-chip" data-mission="Back-to-Back Assignments">⚡ Back-to-Back</button>
+            <button class="mission-chip" data-mission="Survive travel day">✈️ Survive travel day</button>
+            <button class="mission-chip" data-mission="Avoid the 3PM crash">⏱ Avoid the 3PM crash</button>
+            <button class="mission-chip" data-mission="Recover from bad sleep">😴 Recover from bad sleep</button>
+            <button class="mission-chip" data-mission="Late shift survival">🌙 Late shift survival</button>
+            <button class="mission-chip" data-mission="Stay sharp on deadline">⚡ Stay sharp on deadline</button>
+            <button class="mission-chip" data-mission="Damage control">🔧 Damage control</button>
           </div>
         </div>
 
@@ -970,28 +897,38 @@
               <div class="sc-title">10-min break</div>
               <div class="sc-desc">Between two stories</div>
             </button>
+            <button class="scenario-card" data-scenario="conference-buffet">
+              <div class="sc-icon">🍽</div>
+              <div class="sc-title">Conference buffet</div>
+              <div class="sc-desc">Bad options everywhere</div>
+            </button>
+            <button class="scenario-card" data-scenario="delayed-flight">
+              <div class="sc-icon">😤</div>
+              <div class="sc-title">Delayed flight, starving</div>
+              <div class="sc-desc">Nothing good nearby</div>
+            </button>
           </div>
         </div>
 
       </div>
     </div>
 
-    <!-- ── COACH — Field Advisor (Step 4) ── -->
+    <!-- ── CALL (COACH) ───────────────────────────── -->
     <div id="panel-coach" class="panel">
       <div class="chat-msgs" id="chat-msgs">
         <div class="chat-empty" id="chat-empty">
           <div class="chat-empty-icon">📡</div>
           <h3>Field advisor standing by.</h3>
-          <p>Tell me where you are and what you're working with. I'll make the call.</p>
+          <p>Tell me where you are and what you're working with.</p>
           <div class="suggestions">
             <button class="suggestion" data-prompt="Gate change in 8 minutes. Best food move at this airport?">Gate change in 8 minutes. Best move?</button>
-            <button class="suggestion" data-prompt="It's 2AM, I'm still filing a story. What do I order or eat right now?">2AM, still filing. What do I eat?</button>
-            <button class="suggestion" data-prompt="Just landed from a 9-hour red-eye. I'm wrecked. What do I do right now?">Just landed from a 9-hour red-eye.</button>
+            <button class="suggestion" data-prompt="It's 2AM, I'm still filing a story. What do I eat right now?">2AM, still filing. What do I eat?</button>
+            <button class="suggestion" data-prompt="Just landed from a 9-hour red-eye. I'm wrecked. What now?">Landed from a 9-hour red-eye.</button>
           </div>
         </div>
       </div>
 
-      <!-- Mode toggle + constraints toolbar -->
+      <!-- Mode toggle + constraints -->
       <div class="coach-toolbar">
         <div class="mode-row">
           <span class="mode-row-label">Mode</span>
@@ -1012,6 +949,8 @@
             <button class="cchip" data-constraint="only vending machine">only vending machine</button>
             <button class="cchip" data-constraint="eating while walking">eating while walking</button>
             <button class="cchip" data-constraint="nothing fresh available">nothing fresh</button>
+            <button class="cchip" data-constraint="no time to sit down">no time to sit</button>
+            <button class="cchip" data-constraint="low budget">low budget</button>
           </div>
         </div>
       </div>
@@ -1029,7 +968,7 @@
       </div>
     </div>
 
-    <!-- ── SNAP — Field Assessment (Step 5) ── -->
+    <!-- ── ASSESS (SNAP) ──────────────────────────── -->
     <div id="panel-snap" class="panel">
       <div class="scroll snap">
 
@@ -1042,17 +981,16 @@
 
         <div id="img-preview" class="img-preview" style="display:none">
           <img id="preview-img" src="" alt="Photo preview">
-          <button class="remove-btn" id="remove-btn" aria-label="Remove photo">✕</button>
+          <button class="remove-btn" id="remove-btn" aria-label="Remove">✕</button>
         </div>
 
-        <!-- Mode selector -->
         <div>
           <span class="eyebrow" style="display:block;margin-bottom:10px">Assessment type</span>
           <div class="snap-mode-row">
-            <button class="snap-chip active" data-mode="general" data-label="Quick Read" data-desc="Rate what you're eating and catch the risk">🔍 Quick Read</button>
-            <button class="snap-chip" data-mode="menu" data-label="Best Pick" data-desc="Find the best 2–3 items on the menu">📋 Best Pick</button>
-            <button class="snap-chip" data-mode="fridge" data-label="Rescue Meal" data-desc="Build a 15-minute meal from what you have">🧊 Rescue Meal</button>
-            <button class="snap-chip" data-mode="plate" data-label="Damage Report" data-desc="Score your meal and flag what to fix">⚖️ Damage Report</button>
+            <button class="snap-chip active" data-mode="general" data-desc="Rate what you're eating and catch the risk">🔍 Quick Read</button>
+            <button class="snap-chip" data-mode="menu" data-desc="Find the best 2–3 items on the menu">📋 Best Pick</button>
+            <button class="snap-chip" data-mode="fridge" data-desc="Build a 15-minute meal from what you have">🧊 Rescue Meal</button>
+            <button class="snap-chip" data-mode="plate" data-desc="Score your meal and flag what to fix">⚖️ Damage Report</button>
           </div>
           <p class="mode-desc" id="mode-desc">Rate what you're eating and catch the risk</p>
         </div>
@@ -1092,14 +1030,14 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
       </svg>
-      <span class="nav-lbl">Coach</span>
+      <span class="nav-lbl">Call</span>
     </button>
     <button class="nav-btn" data-tab="snap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
         <circle cx="12" cy="13" r="4"></circle>
       </svg>
-      <span class="nav-lbl">Snap</span>
+      <span class="nav-lbl">Assess</span>
     </button>
   </nav>
 
@@ -1120,99 +1058,122 @@
     snapFile:    null,
     snapMode:    'general',
     snapBusy:    false,
+    lastCall:    null,   // { text, time, mode }
   };
 
-  // ── Energy label map ───────────────────────────────
+  // ── Maps ───────────────────────────────────────────
   const ENERGY_LABELS = {
-    'normal':      'Holding steady',
-    'low':         'Frayed',
-    'exhausted':   'Running on fumes',
-    'post red-eye':'Running on fumes',
-    'wired':       'Locked in',
+    normal:         'Holding steady',
+    low:            'Frayed',
+    exhausted:      'Running on fumes',
+    'post red-eye': 'Running on fumes',
+    wired:          'Locked in',
   };
 
   // ── Scenario prompts ───────────────────────────────
   const SCENARIO_PROMPTS = {
-    'gate-change':  "My gate just changed and I have about 12 minutes before I need to be there. I need to eat something. What's the best food move I can make right now in an airport?",
-    'post-redeye':  "I just landed from a red-eye flight. I'm exhausted, disoriented, and starting a work day. What should I eat or do right now to start recovering?",
-    'hotel-midnight': "It's past midnight and I'm at the hotel. Room service or the lobby menu are my only options. What's the smartest thing to order for sleep and recovery?",
-    'press-room':   "The only food available right now is a press room spread — pastries, bagels, bad coffee, maybe some fruit. What's the least bad move here?",
-    'gas-station':  "Gas station is my only option right now. No restaurants nearby. What do I actually pick in a gas station to stay functional?",
-    'ten-min-break':"I have a 10-minute break between two stories. No time to sit down and eat. What can I grab or eat that'll hold me through the next push?",
+    'gate-change':      "Gate change in 12 minutes. I need to eat something at the airport right now. What's the best food move I can make?",
+    'post-redeye':      "I just landed from a red-eye flight. I'm exhausted, disoriented, and starting a work day. What should I eat or do right now to start recovering?",
+    'hotel-midnight':   "It's past midnight and I'm at the hotel. Room service or lobby menu only. What's the smartest thing to order for sleep and recovery?",
+    'press-room':       "The only food available right now is a press room spread — pastries, bagels, bad coffee. What's the least bad move here?",
+    'gas-station':      "Gas station is my only option. No restaurants nearby. What do I actually pick here to stay functional?",
+    'ten-min-break':    "I have a 10-minute break between two stories. No time to sit down and eat a meal. What can I grab that'll hold me through the next push?",
+    'conference-buffet':"I'm at a conference with a buffet that's mostly bad options — white carbs, heavy protein, cheap pastries. What's the smartest move here?",
+    'delayed-flight':   "My flight is delayed and I'm starving. I've already been sitting here for two hours. The options around me are limited and mostly bad. What do I do?",
   };
+
+  // ── Follow-up chips by mode ────────────────────────
+  const FOLLOWUPS = {
+    Decide: [
+      { label: "What's the backup?",         prompt: "What's my backup option if that's not available?" },
+      { label: "What do I do after?",        prompt: "What should I eat or do in 2-3 hours from now?" },
+      { label: "All options are bad",        prompt: "What if every option available right now is poor quality? Give me the least bad move." },
+    ],
+    Explain: [
+      { label: "Just the move",              prompt: "Skip the explanation — just give me the exact move in one line." },
+      { label: "What's the backup?",         prompt: "What's my backup option if I can't do that?" },
+      { label: "What happens in 2–3 hours?", prompt: "What should I watch for or eat in 2-3 hours?" },
+    ],
+    'Damage Control': [
+      { label: "When do I eat next?",        prompt: "When should I eat next after this, and what should it be?" },
+      { label: "What to avoid now?",         prompt: "What should I absolutely not eat or drink right now after this?" },
+      { label: "Set up a better tomorrow",   prompt: "How do I set up a better tomorrow morning after today's choices?" },
+    ],
+  };
+
+  // ── Auto-Damage Control patterns ──────────────────
+  const DC_PATTERNS = [
+    /i already (ate|had|eaten|drank)/i,
+    /i just (ate|had|eaten|drank|finished|polished off)/i,
+    /i('ve| have) been (eating|drinking)/i,
+    /i overdid/i,
+    /ate too much/i,
+    /drank too much/i,
+    /had too many/i,
+    /i('m| am) (crashing|crashed)/i,
+    /already (ate|had)/i,
+    /just ate/i,
+    /messed up (the meal|my meal|my eating|today)/i,
+    /hotel breakfast .*(too much|overdid|regret)/i,
+  ];
+
+  function shouldAutoDC(text) {
+    return DC_PATTERNS.some(p => p.test(text)) && S.chatMode !== 'Damage Control';
+  }
+
+  function switchModeTo(mode) {
+    S.chatMode = mode;
+    document.querySelectorAll('.mchip').forEach(c => c.classList.remove('active'));
+    const chip = document.querySelector(`.mchip[data-mode="${mode}"]`);
+    if (chip) chip.classList.add('active');
+  }
 
   // ── Hero card copy matrix ──────────────────────────
   function getHeroContent(hour, energy) {
     const e = energy;
     if (hour >= 22 || hour < 4) {
-      if (e === 'exhausted' || e === 'post red-eye')
-        return { h: "Late shift survival mode.", s: "Do not go sugar-first — the crash will floor you. Protein + water now, then rest." };
-      if (e === 'low')
-        return { h: "Late and fading.", s: "Slow fuel only. Protein or nuts. Anything sweet spikes and crashes hard this late." };
-      if (e === 'wired')
-        return { h: "Wired at this hour is temporary.", s: "Get ahead of the comedown now. Real food. Caffeine after midnight will make tomorrow worse." };
+      if (e === 'exhausted' || e === 'post red-eye') return { h: "Late shift survival mode.", s: "Do not go sugar-first — the crash will floor you. Protein + water now, then rest." };
+      if (e === 'low')   return { h: "Late and fading.", s: "Slow fuel only. Anything sweet spikes and crashes hard this late." };
+      if (e === 'wired') return { h: "Wired at this hour is temporary.", s: "Get ahead of the comedown now. Real food. Caffeine will make tomorrow worse." };
       return { h: "Still at it.", s: "Clean fuel only this late. Protein + complex carbs. Skip anything that'll spike you before sleep." };
     }
     if (hour < 9) {
-      if (e === 'exhausted' || e === 'post red-eye')
-        return { h: "Sleep debt is compounding.", s: "Electrolytes and protein before caffeine. Hold the coffee 20 minutes or it'll hollow you out by 10." };
-      if (e === 'low')
-        return { h: "Starting slow.", s: "Protein before caffeine. This morning sets the ceiling for the whole day." };
-      if (e === 'wired')
-        return { h: "Up early and locked in.", s: "Anchor the caffeine with real food now before it wears off. Sustained energy beats a spike." };
-      return { h: "Early window. Use it.", s: "Set the day right now. Protein + slow carbs, hold caffeine 30 min. This pays dividends until noon." };
+      if (e === 'exhausted' || e === 'post red-eye') return { h: "Sleep debt is compounding.", s: "Electrolytes and protein before caffeine. Hold the coffee 20 minutes or it'll hollow you out by 10." };
+      if (e === 'low')   return { h: "Starting slow.", s: "Protein before caffeine. This morning sets the ceiling for the whole day." };
+      if (e === 'wired') return { h: "Up early and locked in.", s: "Anchor the caffeine with real food before it wears off. Sustained energy beats a spike." };
+      return { h: "Early window. Use it.", s: "Set the day right now. Protein + slow carbs, hold caffeine 30 min. Pays dividends until noon." };
     }
     if (hour < 13) {
-      if (e === 'exhausted' || e === 'post red-eye')
-        return { h: "Behind from the start.", s: "Catch up with electrolytes + protein now. Caffeine alone will make you worse by 2PM — not better." };
-      if (e === 'low')
-        return { h: "Below baseline.", s: "Prioritize protein and hydration. Avoid sugar — it'll feel like a fix and won't be one." };
-      if (e === 'wired')
-        return { h: "Peaked early.", s: "Pair the energy with real food or the drop will come hard. Protein + complex carbs right now." };
-      return { h: "You're in your window.", s: "Peak cognitive hours until early afternoon. Sharp fuel only — no crashes, no spikes, no regrets." };
+      if (e === 'exhausted' || e === 'post red-eye') return { h: "Behind from the start.", s: "Catch up with electrolytes + protein now. Caffeine alone will make you worse by 2PM." };
+      if (e === 'low')   return { h: "Below baseline.", s: "Prioritize protein and hydration. Avoid sugar — it'll feel like a fix and won't be." };
+      if (e === 'wired') return { h: "Peaked early.", s: "Pair the energy with real food or the drop will come hard. Protein + complex carbs right now." };
+      return { h: "You're in your window.", s: "Peak cognitive hours until early afternoon. Sharp fuel only — no crashes, no spikes." };
     }
     if (hour < 18) {
-      if (e === 'exhausted' || e === 'post red-eye')
-        return { h: "In the danger zone.", s: "3PM wall incoming and you're already low. Protein now or the crash will be brutal and long." };
-      if (e === 'low')
-        return { h: "3PM is coming for you.", s: "Make a proactive call now. Protein + nuts beat the slump. Don't wait until you're desperate." };
-      if (e === 'wired')
-        return { h: "Caffeine won't carry you through the slump.", s: "Eat something real before it hits. You're borrowing time from yourself right now." };
-      return { h: "3PM is a trap.", s: "Most people let the slump choose for them. Make a proactive food call now, before you're desperate." };
+      if (e === 'exhausted' || e === 'post red-eye') return { h: "In the danger zone.", s: "3PM wall incoming and you're already low. Protein now or the crash will be brutal." };
+      if (e === 'low')   return { h: "3PM is coming for you.", s: "Make a proactive call now. Protein + nuts beat the slump. Don't wait until you're desperate." };
+      if (e === 'wired') return { h: "Caffeine won't carry you through the slump.", s: "Eat something real before it hits. You're borrowing time from yourself." };
+      return { h: "3PM is a trap.", s: "Most people let the slump choose for them. Make a proactive food call now, not when you're desperate." };
     }
-    if (e === 'exhausted' || e === 'post red-eye')
-      return { h: "Running on empty.", s: "Real meal if you can get it tonight. Tomorrow starts with tonight's recovery. Don't skip it." };
-    if (e === 'low')
-      return { h: "End of a long day.", s: "Eat a proper meal. Your body will use the fuel overnight if you let it. Skip alcohol." };
-    if (e === 'wired')
-      return { h: "Still locked in this late.", s: "Wind down the caffeine. Eat something real. Getting ahead of the crash is the smarter move." };
-    return { h: "Bank the recovery.", s: "Good time to eat a real meal if the day allows. Your body will put it to work overnight." };
+    if (e === 'exhausted' || e === 'post red-eye') return { h: "Running on empty.", s: "Real meal if you can get it. Tomorrow starts with tonight's recovery. Don't skip it." };
+    if (e === 'low')   return { h: "End of a long day.", s: "Eat a proper meal. Your body will use the fuel overnight if you let it." };
+    if (e === 'wired') return { h: "Still locked in this late.", s: "Wind down the caffeine. Eat something real. Getting ahead of the crash is the smarter move." };
+    return { h: "Bank the recovery.", s: "Good time to eat a real meal. Your body will put it to work overnight." };
   }
 
   function renderHeroCard() {
-    const hour = new Date().getHours();
-    const content = getHeroContent(hour, S.energy);
-    document.getElementById('hero-headline').textContent = content.h;
-    document.getElementById('hero-sub').textContent = content.s;
+    const { h, s } = getHeroContent(new Date().getHours(), S.energy);
+    document.getElementById('hero-headline').textContent = h;
+    document.getElementById('hero-sub').textContent = s;
   }
 
-  // ── Situation Strip render ─────────────────────────
+  // ── Situation Strip ────────────────────────────────
   function renderStrip() {
     document.getElementById('strip-loc').textContent = S.location || 'No location';
     document.getElementById('strip-energy').textContent = ENERGY_LABELS[S.energy] || 'Holding steady';
-    const missionEl = document.getElementById('strip-mission');
-    if (S.mission) {
-      missionEl.textContent = S.mission;
-      missionEl.style.display = '';
-    } else {
-      missionEl.style.display = 'none';
-    }
-  }
-
-  // ── Strip time (separate from main clock) ─────────
-  function updateStripTime() {
-    document.getElementById('strip-time').textContent =
-      new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const mEl = document.getElementById('strip-mission');
+    if (S.mission) { mEl.textContent = S.mission; mEl.style.display = ''; }
+    else             mEl.style.display = 'none';
   }
 
   // ── Clock ──────────────────────────────────────────
@@ -1233,20 +1194,15 @@
     document.querySelector('.nav-btn[data-tab="' + tab + '"]').classList.add('active');
   }
 
-  document.querySelectorAll('.nav-btn').forEach(b =>
-    b.addEventListener('click', () => goTab(b.dataset.tab))
-  );
+  document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => goTab(b.dataset.tab)));
 
   // ── Context inputs ─────────────────────────────────
   document.getElementById('loc-input').addEventListener('input', e => {
-    S.location = e.target.value.trim();
-    renderStrip();
+    S.location = e.target.value.trim(); renderStrip();
   });
 
   document.getElementById('energy-sel').addEventListener('change', e => {
-    S.energy = e.target.value;
-    renderStrip();
-    renderHeroCard();
+    S.energy = e.target.value; renderStrip(); renderHeroCard();
   });
 
   // ── Missions ───────────────────────────────────────
@@ -1254,12 +1210,10 @@
     chip.addEventListener('click', () => {
       const m = chip.dataset.mission;
       if (S.mission === m) {
-        S.mission = null;
-        chip.classList.remove('active');
+        S.mission = null; chip.classList.remove('active');
       } else {
         document.querySelectorAll('.mission-chip').forEach(c => c.classList.remove('active'));
-        S.mission = m;
-        chip.classList.add('active');
+        S.mission = m; chip.classList.add('active');
       }
       renderStrip();
     });
@@ -1294,13 +1248,8 @@
   document.querySelectorAll('.cchip').forEach(chip => {
     chip.addEventListener('click', () => {
       const c = chip.dataset.constraint;
-      if (S.constraints.has(c)) {
-        S.constraints.delete(c);
-        chip.classList.remove('active');
-      } else {
-        S.constraints.add(c);
-        chip.classList.add('active');
-      }
+      if (S.constraints.has(c)) { S.constraints.delete(c); chip.classList.remove('active'); }
+      else                        { S.constraints.add(c);    chip.classList.add('active'); }
       const count = S.constraints.size;
       const countEl = document.getElementById('constraint-count');
       countEl.textContent = count;
@@ -1313,22 +1262,31 @@
     s.addEventListener('click', () => doSend(s.dataset.prompt))
   );
 
+  // ── Last call preview on Brief ─────────────────────
+  function updateLastCall(text, mode) {
+    const firstLine = text.split('\n').find(l => l.trim()) || text;
+    const clean = firstLine.replace(/\*\*/g, '').replace(/^(Best move:|Here's how)[:\s]*/i, '').trim();
+    S.lastCall = { text: clean, mode };
+
+    const el = document.getElementById('last-call');
+    document.getElementById('last-call-label').textContent = 'Last call · ' + mode;
+    document.getElementById('last-call-text').textContent = clean;
+    el.style.display = 'flex';
+  }
+
+  document.getElementById('last-call-cta').addEventListener('click', () => goTab('coach'));
+
   // ── Markdown renderer ──────────────────────────────
   function escHtml(s) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   function md(text) {
     let s = escHtml(text);
     s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-
     const lines = s.split('\n');
     const out = []; let list = null;
-
     for (const line of lines) {
       const t = line.trim();
       if (/^[-•*]\s+/.test(t)) {
@@ -1346,35 +1304,93 @@
     return out.join('');
   }
 
-  // Parse structured decision format from model response
-  function renderDecisionBubble(text, mode) {
-    const sections = {};
-    const patterns = {
-      move:  /\*\*Best move[:\s]\*\*\s*([^\n*]+)/i,
-      why:   /\*\*Why[:\s]\*\*\s*([^\n*]+)/i,
-      avoid: /\*\*Avoid[:\s]\*\*\s*([^\n*]+)/i,
-      damage:/here['']s how we limit the damage\.?\s*/i,
+  // ── Structured response parsing ────────────────────
+  function extractLabel(label, text) {
+    const esc = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('\\*\\*' + esc + '[:\\s]?\\*\\*\\s*([^\\n]+(?:\\n(?!\\s*\\*\\*)[^\\n]+)*)', 'i');
+    const m = text.match(re);
+    return m ? m[1].trim() : null;
+  }
+
+  function extractTimeHorizon(text) {
+    const now      = text.match(/\*\*NOW\s*→\*\*\s*([^\n]+)/i);
+    const later    = text.match(/\*\*LATER\s*→\*\*\s*([^\n]+)/i);
+    const tomorrow = text.match(/\*\*TOMORROW\s*→\*\*\s*([^\n]+)/i);
+    if (!now && !later && !tomorrow) return null;
+    return {
+      now:      now      ? now[1].trim()      : null,
+      later:    later    ? later[1].trim()    : null,
+      tomorrow: tomorrow ? tomorrow[1].trim() : null,
     };
+  }
 
-    const moveMatch  = text.match(patterns.move);
-    const whyMatch   = text.match(patterns.why);
-    const avoidMatch = text.match(patterns.avoid);
+  function renderTimeHorizon(h) {
+    if (!h) return '';
+    let out = '<div class="time-horizon">';
+    if (h.now)      out += `<div class="th-item"><span class="th-label">Now</span><div class="th-body">${escHtml(h.now)}</div></div>`;
+    if (h.later)    out += `<div class="th-item"><span class="th-label">In 2–3 hrs</span><div class="th-body">${escHtml(h.later)}</div></div>`;
+    if (h.tomorrow) out += `<div class="th-item"><span class="th-label">Tomorrow</span><div class="th-body">${escHtml(h.tomorrow)}</div></div>`;
+    out += '</div>';
+    return out;
+  }
 
-    if (moveMatch) {
+  function extractStackWarning(text) {
+    const m = text.match(/⚡\s*Stack warning:\s*([^\n]+)/i);
+    return m ? m[1].trim() : null;
+  }
+
+  function renderStackWarning(w) {
+    if (!w) return '';
+    return `<div class="stack-warning">⚡ Stack warning: ${escHtml(w)}</div>`;
+  }
+
+  function renderDecisionBubble(text, mode) {
+    const horizons     = extractTimeHorizon(text);
+    const stackWarning = extractStackWarning(text);
+
+    if (mode === 'Damage Control') {
+      const leastBad = extractLabel('Least bad option', text);
+      const pair     = extractLabel('Pair with', text);
+      const noStack  = extractLabel("Don't stack", text) || extractLabel('Avoid stacking', text);
+      const recovery = extractLabel('Recovery move', text);
+      if (leastBad || pair) {
+        let html = '<div class="decision-block">';
+        if (leastBad) html += `<div class="dsec"><span class="dsec-label">Least bad option</span><div class="dsec-body">${escHtml(leastBad)}</div></div>`;
+        if (pair)     html += `<div class="dsec"><span class="dsec-label">Pair with</span><div class="dsec-body">${escHtml(pair)}</div></div>`;
+        if (noStack)  html += `<div class="dsec"><span class="dsec-label">Don't stack</span><div class="dsec-body">${escHtml(noStack)}</div></div>`;
+        if (recovery) html += `<div class="dsec"><span class="dsec-label">Recovery move</span><div class="dsec-body">${escHtml(recovery)}</div></div>`;
+        html += '</div>';
+        if (horizons)     html += renderTimeHorizon(horizons);
+        if (stackWarning) html += renderStackWarning(stackWarning);
+        return html;
+      }
+    }
+
+    // Decide / Explain
+    const move     = extractLabel('Best move', text);
+    const why      = extractLabel('Why', text);
+    const backup   = extractLabel('Backup', text);
+    const avoid    = extractLabel('Avoid', text);
+    const recovery = extractLabel('Recovery', text);
+
+    if (move) {
       let html = '<div class="decision-block">';
-      html += `<div class="dsec"><span class="dsec-label">Best move</span><div class="dsec-body">${escHtml(moveMatch[1].trim())}</div></div>`;
-      if (whyMatch) html += `<div class="dsec"><span class="dsec-label">Why</span><div class="dsec-body">${escHtml(whyMatch[1].trim())}</div></div>`;
-      if (avoidMatch) html += `<div class="dsec"><span class="dsec-label">Avoid</span><div class="dsec-body">${escHtml(avoidMatch[1].trim())}</div></div>`;
+      if (move)     html += `<div class="dsec"><span class="dsec-label">Best move</span><div class="dsec-body">${escHtml(move)}</div></div>`;
+      if (why)      html += `<div class="dsec"><span class="dsec-label">Why</span><div class="dsec-body">${escHtml(why)}</div></div>`;
+      if (backup)   html += `<div class="dsec"><span class="dsec-label">Backup</span><div class="dsec-body">${escHtml(backup)}</div></div>`;
+      if (avoid)    html += `<div class="dsec"><span class="dsec-label">Avoid</span><div class="dsec-body">${escHtml(avoid)}</div></div>`;
+      if (recovery) html += `<div class="dsec"><span class="dsec-label">Recovery</span><div class="dsec-body">${escHtml(recovery)}</div></div>`;
       html += '</div>';
+      if (horizons)     html += renderTimeHorizon(horizons);
+      if (stackWarning) html += renderStackWarning(stackWarning);
       return html;
     }
 
-    // Damage Control — check for damage protocol lead-in
-    if (mode === 'Damage Control') {
-      return md(text);
-    }
-
-    return md(text);
+    // Fallback
+    let html = md(text);
+    if (horizons)     html += renderTimeHorizon(horizons);
+    if (stackWarning) html += renderStackWarning(stackWarning);
+    return html;
   }
 
   // ── Chat ───────────────────────────────────────────
@@ -1382,10 +1398,36 @@
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
+  function clearFollowups() {
+    document.querySelectorAll('.followup-row').forEach(r => r.remove());
+  }
+
+  function appendFollowups(mode) {
+    const container  = document.getElementById('chat-msgs');
+    const followups  = FOLLOWUPS[mode] || FOLLOWUPS.Decide;
+    const row        = document.createElement('div');
+    row.className    = 'followup-row';
+
+    followups.forEach(f => {
+      const btn = document.createElement('button');
+      btn.className   = 'fup';
+      btn.textContent = f.label;
+      btn.addEventListener('click', () => {
+        clearFollowups();
+        doSend(f.prompt);
+      });
+      row.appendChild(btn);
+    });
+
+    container.appendChild(row);
+    container.scrollTop = container.scrollHeight;
+  }
+
   function appendMsg(role, content, time) {
     const container = document.getElementById('chat-msgs');
     const empty = document.getElementById('chat-empty');
     if (empty) empty.remove();
+    clearFollowups();
 
     const isUser = role === 'user';
     const div = document.createElement('div');
@@ -1393,15 +1435,13 @@
 
     let bubbleClass = 'bubble';
     if (!isUser) {
-      if (S.chatMode === 'Decide') bubbleClass += ' mode-decide';
-      else if (S.chatMode === 'Damage Control') bubbleClass += ' mode-damage';
+      if (S.chatMode === 'Decide' || S.chatMode === 'Explain') bubbleClass += ' mode-decide';
+      else if (S.chatMode === 'Damage Control')                bubbleClass += ' mode-damage';
     }
 
     const bubbleContent = isUser
       ? escHtml(content).replace(/\n/g, '<br>')
-      : (S.chatMode === 'Decide' || S.chatMode === 'Damage Control'
-          ? renderDecisionBubble(content, S.chatMode)
-          : md(content));
+      : renderDecisionBubble(content, S.chatMode);
 
     if (isUser) {
       div.innerHTML = `
@@ -1422,11 +1462,19 @@
     container.scrollTop = container.scrollHeight;
   }
 
+  function appendSystemNote(text) {
+    const container = document.getElementById('chat-msgs');
+    const div = document.createElement('div');
+    div.className = 'system-note';
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
   function showTyping() {
     const container = document.getElementById('chat-msgs');
     const empty = document.getElementById('chat-empty');
     if (empty) empty.remove();
-
     const div = document.createElement('div');
     div.className = 'msg ai'; div.id = 'typing';
     div.innerHTML = `
@@ -1440,14 +1488,11 @@
     container.scrollTop = container.scrollHeight;
   }
 
-  function hideTyping() {
-    const el = document.getElementById('typing');
-    if (el) el.remove();
-  }
+  function hideTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
 
-  const CHAT_LOADING_COPY = {
-    'Decide':         'Making the call…',
-    'Explain':        'Working it through…',
+  const CHAT_LOADING = {
+    Decide:           'Making the call…',
+    Explain:          'Working it through…',
     'Damage Control': 'Assessing the damage…',
   };
 
@@ -1459,6 +1504,12 @@
     input.value = '';
     autoResize(input);
 
+    // Auto-switch to Damage Control if message describes past eating
+    if (shouldAutoDC(raw)) {
+      switchModeTo('Damage Control');
+      appendSystemNote('Switching to Damage Control for this one.');
+    }
+
     appendMsg('user', raw, nowTime());
     S.messages.push({ role: 'user', content: raw });
 
@@ -1468,8 +1519,8 @@
 
     try {
       const body = { messages: S.messages.map(m => ({ role: m.role, content: m.content })) };
-      if (S.location)            body.location      = S.location;
-      if (S.energy !== 'normal') body.energy_level  = S.energy;
+      if (S.location)           body.location      = S.location;
+      if (S.energy !== 'normal') body.energy_level = S.energy;
       if (S.mission)             body.mission       = S.mission;
       if (S.chatMode)            body.chat_mode     = S.chatMode;
       if (S.constraints.size)   body.constraints   = [...S.constraints];
@@ -1486,6 +1537,8 @@
       hideTyping();
       appendMsg('ai', data.response, nowTime());
       S.messages.push({ role: 'assistant', content: data.response });
+      appendFollowups(S.chatMode);
+      updateLastCall(data.response, S.chatMode);
 
     } catch (err) {
       hideTyping();
@@ -1517,39 +1570,29 @@
   const snapResult = document.getElementById('snap-result');
 
   function setFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file) return;
     S.snapFile = file;
-    const reader = new FileReader();
-    reader.onload = e => {
-      previewImg.src = e.target.result;
-      uploadZone.style.display = 'none';
-      imgPreview.style.display = 'block';
-      analyzeBtn.disabled = false;
-      snapResult.style.display = 'none';
-      snapResult.innerHTML = '';
-    };
-    reader.readAsDataURL(file);
+    if (previewImg._objUrl) URL.revokeObjectURL(previewImg._objUrl);
+    previewImg._objUrl = URL.createObjectURL(file);
+    previewImg.src = previewImg._objUrl;
+    uploadZone.style.display = 'none';
+    imgPreview.style.display = 'block';
+    analyzeBtn.disabled = false;
+    snapResult.style.display = 'none'; snapResult.innerHTML = '';
   }
 
   fileInput.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]); });
   uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
   uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault(); uploadZone.classList.remove('drag-over');
-    setFile(e.dataTransfer.files[0]);
-  });
-  uploadZone.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
-  });
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); setFile(e.dataTransfer.files[0]); });
+  uploadZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
 
   document.getElementById('remove-btn').addEventListener('click', () => {
     S.snapFile = null; fileInput.value = ''; previewImg.src = '';
     imgPreview.style.display = 'none'; uploadZone.style.display = 'block';
-    analyzeBtn.disabled = true;
-    snapResult.style.display = 'none'; snapResult.innerHTML = '';
+    analyzeBtn.disabled = true; snapResult.style.display = 'none'; snapResult.innerHTML = '';
   });
 
-  // Snap mode chips
   document.querySelectorAll('.snap-chip').forEach(chip => {
     chip.addEventListener('click', () => {
       document.querySelectorAll('.snap-chip').forEach(c => c.classList.remove('active'));
@@ -1559,40 +1602,29 @@
     });
   });
 
-  // Structured result renderer for Snap
+  // ── Snap result rendering ──────────────────────────
   function renderSnapResult(text, mode) {
     const isBadOptions = /^BAD OPTIONS/i.test(text.trim());
+    const cleanText    = text.replace(/^BAD OPTIONS\s*[—-]?\s*damage control:?\s*/i, '').trim();
+    const cardClass    = 'result-card' + (isBadOptions ? ' bad-options' : '');
+    const titleText    = isBadOptions ? '⚠ Bad Options — Damage Control' : 'Field Assessment';
+    const modeLabels   = { general: 'Quick Read', menu: 'Best Pick', fridge: 'Rescue Meal', plate: 'Damage Report' };
+    const modeLabel    = modeLabels[mode] || mode;
 
-    // Try to parse labeled sections
-    function extractLabel(label, src) {
-      const re = new RegExp('\\*\\*' + label + '[:\\s]\\*\\*\\s*([^\\n*]+(?:\\n(?!\\*\\*)[^\\n*]+)*)', 'i');
-      const m = src.match(re);
-      return m ? m[1].trim() : null;
-    }
+    let foodSections = '';
+    let sceneSections = '';
 
-    const modeLabels = { general: 'Quick Read', menu: 'Best Pick', fridge: 'Rescue Meal', plate: 'Damage Report' };
-    const label = modeLabels[mode] || mode;
-    const cardClass = 'result-card' + (isBadOptions ? ' bad-options' : '');
-    const titleText = isBadOptions ? '⚠ Bad Options — Damage Control' : 'Field Assessment';
-
-    // Clean the BAD OPTIONS prefix from display text
-    const cleanText = text.replace(/^BAD OPTIONS\s*[—-]?\s*damage control:?\s*/i, '').trim();
-
-    let sectionsHtml = '';
-
+    // Food-level sections
     if (mode === 'general' || mode === 'plate') {
       const score = extractLabel('Score', cleanText);
       const asset = extractLabel('Biggest asset', cleanText);
       const risk  = extractLabel('Main risk', cleanText);
       const adj   = extractLabel('Best adjustment', cleanText);
-
       if (score || asset) {
-        if (score) {
-          sectionsHtml += `<div class="asec"><span class="asec-label">Score</span><div class="score-display">${escHtml(score)}</div></div>`;
-        }
-        if (asset) sectionsHtml += `<div class="asec"><span class="asec-label">Biggest asset</span><div class="asec-value">${escHtml(asset)}</div></div>`;
-        if (risk)  sectionsHtml += `<div class="asec"><span class="asec-label">Main risk</span><div class="asec-value">${escHtml(risk)}</div></div>`;
-        if (adj)   sectionsHtml += `<div class="asec"><span class="asec-label">Best adjustment</span><div class="asec-value">${escHtml(adj)}</div></div>`;
+        if (score) foodSections += `<div class="asec"><span class="asec-label">Score</span><div class="score-display">${escHtml(score)}</div></div>`;
+        if (asset) foodSections += `<div class="asec"><span class="asec-label">Biggest asset</span><div class="asec-value">${escHtml(asset)}</div></div>`;
+        if (risk)  foodSections += `<div class="asec"><span class="asec-label">Main risk</span><div class="asec-value">${escHtml(risk)}</div></div>`;
+        if (adj)   foodSections += `<div class="asec"><span class="asec-label">Best adjustment</span><div class="asec-value">${escHtml(adj)}</div></div>`;
       }
     }
 
@@ -1600,11 +1632,10 @@
       const best   = extractLabel('Best pick', cleanText);
       const backup = extractLabel('Backup', cleanText);
       const skip   = extractLabel('Skip', cleanText);
-
       if (best) {
-        sectionsHtml += `<div class="asec"><span class="asec-label">Best pick</span><div class="asec-value">${escHtml(best)}</div></div>`;
-        if (backup) sectionsHtml += `<div class="asec"><span class="asec-label">Backup</span><div class="asec-value">${escHtml(backup)}</div></div>`;
-        if (skip)   sectionsHtml += `<div class="asec"><span class="asec-label">Skip</span><div class="asec-value">${escHtml(skip)}</div></div>`;
+        foodSections += `<div class="asec"><span class="asec-label">Best pick</span><div class="asec-value">${escHtml(best)}</div></div>`;
+        if (backup) foodSections += `<div class="asec"><span class="asec-label">Backup</span><div class="asec-value">${escHtml(backup)}</div></div>`;
+        if (skip)   foodSections += `<div class="asec"><span class="asec-label">Skip</span><div class="asec-value">${escHtml(skip)}</div></div>`;
       }
     }
 
@@ -1612,42 +1643,54 @@
       const meal  = extractLabel('Meal', cleanText);
       const steps = extractLabel('Steps', cleanText);
       const why   = extractLabel('Why it works', cleanText);
-
       if (meal) {
-        sectionsHtml += `<div class="asec"><span class="asec-label">Rescue meal</span><div class="asec-value" style="font-weight:600;font-size:16px">${escHtml(meal)}</div></div>`;
-        if (steps) sectionsHtml += `<div class="asec"><span class="asec-label">Steps</span><div class="asec-value">${md(steps)}</div></div>`;
-        if (why)   sectionsHtml += `<div class="asec"><span class="asec-label">Why it works</span><div class="asec-value">${escHtml(why)}</div></div>`;
+        foodSections += `<div class="asec"><span class="asec-label">Rescue meal</span><div class="asec-value" style="font-weight:600;font-size:16px">${escHtml(meal)}</div></div>`;
+        if (steps) foodSections += `<div class="asec"><span class="asec-label">Steps</span><div class="asec-value">${md(steps)}</div></div>`;
+        if (why)   foodSections += `<div class="asec"><span class="asec-label">Why it works</span><div class="asec-value">${escHtml(why)}</div></div>`;
       }
     }
 
-    // If we got structured sections, render the card
-    if (sectionsHtml) {
+    // Scene-level sections
+    const situRead  = extractLabel('Situation read', cleanText);
+    const crashRisk = extractLabel('Crash risk', cleanText);
+    const focus     = extractLabel('Focus support', cleanText);
+    const sleep     = extractLabel('Sleep impact', cleanText);
+
+    if (situRead || crashRisk || focus) {
+      sceneSections += `<hr class="scene-divider"><div class="scene-section-label">Scene read</div>`;
+      if (situRead)  sceneSections += `<div class="asec"><span class="asec-label">Situation</span><div class="asec-value">${escHtml(situRead)}</div></div>`;
+      if (crashRisk) sceneSections += `<div class="asec"><span class="asec-label">Crash risk</span><div class="asec-value">${escHtml(crashRisk)}</div></div>`;
+      if (focus)     sceneSections += `<div class="asec"><span class="asec-label">Focus support</span><div class="asec-value">${escHtml(focus)}</div></div>`;
+      if (sleep)     sceneSections += `<div class="asec"><span class="asec-label">Sleep impact</span><div class="asec-value">${escHtml(sleep)}</div></div>`;
+    }
+
+    if (foodSections || sceneSections) {
       return `
         <div class="${cardClass}">
           <div class="result-header">
             <span class="result-title">${escHtml(titleText)}</span>
-            <span class="result-badge">${escHtml(label)}</span>
+            <span class="result-badge">${escHtml(modeLabel)}</span>
           </div>
-          <div class="assessment-body">${sectionsHtml}</div>
+          <div class="assessment-body">${foodSections}${sceneSections}</div>
         </div>`;
     }
 
-    // Fallback: markdown in result card
+    // Fallback
     return `
       <div class="${cardClass}">
         <div class="result-header">
           <span class="result-title">${escHtml(titleText)}</span>
-          <span class="result-badge">${escHtml(label)}</span>
+          <span class="result-badge">${escHtml(modeLabel)}</span>
         </div>
         <div class="result-body">${md(cleanText)}</div>
       </div>`;
   }
 
-  const SNAP_LOADING_COPY = {
-    'general': 'Reading the situation…',
-    'menu':    'Checking the menu…',
-    'fridge':  'Building the rescue meal…',
-    'plate':   'Assessing the damage…',
+  const SNAP_LOADING = {
+    general: 'Reading the situation…',
+    menu:    'Checking the menu…',
+    fridge:  'Building the rescue meal…',
+    plate:   'Assessing the damage…',
   };
 
   analyzeBtn.addEventListener('click', async () => {
@@ -1655,14 +1698,15 @@
 
     S.snapBusy = true;
     analyzeBtn.disabled = true;
-    document.getElementById('analyze-label').textContent = SNAP_LOADING_COPY[S.snapMode] || 'Analyzing…';
+    const loadingMsg = SNAP_LOADING[S.snapMode] || 'Analyzing…';
+    document.getElementById('analyze-label').textContent = loadingMsg;
 
     snapResult.style.display = 'block';
     snapResult.innerHTML = `
       <div class="result-card">
         <div class="loading-row">
           <div class="spinner"></div>
-          <span>${SNAP_LOADING_COPY[S.snapMode] || 'Analyzing…'}</span>
+          <span>${loadingMsg}</span>
         </div>
       </div>`;
 
@@ -1676,8 +1720,13 @@
       const res = await fetch(API + '/api/analyze', { method: 'POST', body: fd });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-
-      snapResult.innerHTML = renderSnapResult(data.analysis, data.mode);
+      snapResult.innerHTML = renderSnapResult(data.analysis, data.mode)
+        + '<button class="new-photo-btn" id="new-photo-btn">Upload new photo</button>';
+      document.getElementById('new-photo-btn').addEventListener('click', () => {
+        S.snapFile = null; fileInput.value = ''; previewImg.src = '';
+        imgPreview.style.display = 'none'; uploadZone.style.display = 'block';
+        analyzeBtn.disabled = true; snapResult.style.display = 'none'; snapResult.innerHTML = '';
+      });
 
     } catch (err) {
       snapResult.innerHTML = `
