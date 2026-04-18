@@ -88,6 +88,10 @@ Always remember and reference what the user has told you: location, energy level
             profile_section += f"\nTypical sleep pattern: {profile['sleepPattern']}"
         if profile.get("caffeineHabit"):
             profile_section += f"\nCaffeine habit: {profile['caffeineHabit']}"
+        if profile.get("todayHydration") is not None:
+            profile_section += f"\nWater intake today: {profile['todayHydration']} glasses (goal: 8)"
+        if profile.get("todayMeals"):
+            profile_section += f"\nMeals logged today: {profile['todayMeals']}"
         if profile.get("sensitivities"):
             profile_section += f"\nFood sensitivities/allergies: {profile['sensitivities']}"
         if profile.get("homeBase"):

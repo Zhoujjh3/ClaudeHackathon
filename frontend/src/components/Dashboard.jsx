@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react'
 import {
   MapPin, Zap, Plane, Moon, Coffee, Clock, Wind, Flame,
-  ChevronRight, TrendingUp, Calendar, CheckCircle2, RefreshCw, Heart, Plus, X,
+  ChevronRight, TrendingUp, Calendar, CheckCircle2, RefreshCw,
+  Heart, Droplets, Minus, UtensilsCrossed, Navigation, AlertCircle,
 } from 'lucide-react'
 import axios from 'axios'
 
 const SCENARIOS = [
   { id: 'airport', icon: Plane, label: 'At the airport', color: 'text-blue-600', bg: 'bg-blue-50', message: "I'm at the airport and need to eat. What should I look for and what should I avoid? I have about 20 minutes before boarding." },
   { id: 'late-night', icon: Moon, label: 'Late night shift', color: 'text-violet-600', bg: 'bg-violet-50', message: "It's late and I'm still working. I need to eat something but also need to eventually sleep. What should I have right now?" },
-  { id: 'post-red-eye', icon: Coffee, label: 'Post red-eye', color: 'text-amber-700', bg: 'bg-amber-50', message: "I just landed from an overnight flight. I'm exhausted and my body is wrecked. What should I eat and drink to bounce back fast?" },
+  { id: 'post-red-eye', icon: Coffee, label: 'Post red-eye', color: 'text-amber-700', bg: 'bg-amber-50', message: "I just landed from an overnight flight. I'm exhausted. What should I eat and drink to bounce back fast?" },
   { id: 'deadline', icon: Flame, label: 'On deadline', color: 'text-red-600', bg: 'bg-red-50', message: "I'm on deadline and need to stay sharp for the next 4-5 hours. What should I eat or drink right now?" },
-  { id: 'between', icon: Wind, label: 'Between stories', color: 'text-sage-700', bg: 'bg-sage-50', message: "I have real downtime between assignments. I want to take care of my body properly. What should I focus on right now?" },
+  { id: 'between', icon: Wind, label: 'Between stories', color: 'text-sage-700', bg: 'bg-sage-50', message: "I have real downtime between assignments. What should I focus on for my health right now?" },
   { id: 'quick-break', icon: Clock, label: '10-min break', color: 'text-cyan-700', bg: 'bg-cyan-50', message: "I only have 10 minutes. What's the single best thing I can eat or drink to keep my energy up?" },
 ]
 
@@ -33,15 +34,15 @@ function getTimeBasedTip(hour, profile) {
     : { tip: 'Start with protein, not carbs. Eggs, Greek yogurt, or nuts stabilize blood sugar for hours.', icon: '🥚' }
   if (hour < 13) return { tip: "Pre-lunch dip hits around 11:30am. A handful of mixed nuts now prevents bad lunch decisions.", icon: '🥜' }
   if (hour < 15) return goals.includes('Gut health')
-    ? { tip: 'Lunch pick: salmon or grilled chicken with fermented sides. Your gut microbiome will thank you on the road.', icon: '🐟' }
+    ? { tip: 'Lunch pick: salmon or grilled chicken with fermented sides. Your gut microbiome will thank you.', icon: '🐟' }
     : { tip: "Cognitive performance lunch: salmon > sandwich. Omega-3s and B12 are your brain's best fuel.", icon: '🐟' }
   if (hour < 17) return (caffeine === 'heavy' || goals.includes('Reduce caffeine'))
     ? { tip: "Afternoon slump? 16oz water + a short walk instead of another coffee. Caffeine after 2pm wrecks tonight's sleep.", icon: '⚡' }
     : { tip: "Afternoon slump? Try 16oz of water before coffee. Dehydration mimics fatigue almost perfectly.", icon: '⚡' }
   if (hour < 20) return goals.includes('Better sleep')
-    ? { tip: 'Eat now if you can — 3+ hours before bed is ideal. Magnesium-rich foods (dark leafy greens, almonds) set up better sleep.', icon: '🌙' }
+    ? { tip: 'Eat now if you can — 3+ hours before bed is ideal. Magnesium-rich foods set up better sleep.', icon: '🌙' }
     : { tip: "Evening meal: eat at least 2 hours before wind-down to avoid poor sleep quality.", icon: '🌙' }
-  if (hour < 23) return { tip: "Late eating: go protein + fat, skip the carb spike. Carbs this late disrupt your sleep architecture.", icon: '🛡️' }
+  if (hour < 23) return { tip: "Late eating: go protein + fat, skip the carb spike. Carbs this late disrupt sleep.", icon: '🛡️' }
   return { tip: "After midnight: your gut is shutting down. Handful of nuts max — not a full meal.", icon: '🌑' }
 }
 
@@ -56,6 +57,17 @@ function getStreakCount(checkins) {
     else if (c.date < expected) break
   }
   return streak
+}
+
+function getJetLagInfo(travelLog, homeBase) {
+  if (!travelLog || travelLog.length < 2 || !homeBase) return null
+  const latest = travelLog[travelLog.length - 1]
+  const prev = travelLog[travelLog.length - 2]
+  if (!latest || !prev) return null
+  const daysSince = Math.floor((new Date() - new Date(latest.date)) / 86400000)
+  if (daysSince > 3) return null
+  if (latest.timezone === prev.timezone) return null
+  return { from: prev.city, to: latest.city, fromTz: prev.timezone, toTz: latest.timezone, daysSince }
 }
 
 function formatEventTime(iso) {
@@ -73,15 +85,15 @@ function timeUntil(iso) {
   } catch { return '' }
 }
 
-export default function Dashboard({ context, setContext, onScenario, profile, onCheckin, calendarConnected, calendarEvents, onCalendarRefresh, manualEvents, onAddEvent, onRemoveEvent, apiBase }) {
+export default function Dashboard({ context, setContext, onScenario, profile, onCheckin, darkMode, calendarConnected, calendarEvents, onCalendarRefresh, apiBase, todayWater, addWater, removeWater, todayMeals, addMeal }) {
   const [now, setNow] = useState(new Date())
   const [showCheckin, setShowCheckin] = useState(false)
   const [checkinData, setCheckinData] = useState({ energy: '', sleepHours: '', mealQuality: '', hydration: '', notes: '' })
   const [checkinInsight, setCheckinInsight] = useState(null)
   const [checkinLoading, setCheckinLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [showAddEvent, setShowAddEvent] = useState(false)
-  const [newEvent, setNewEvent] = useState({ title: '', time: '' })
+  const [mealInput, setMealInput] = useState('')
+  const [showMealInput, setShowMealInput] = useState(false)
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 60000); return () => clearInterval(t) }, [])
 
@@ -91,64 +103,144 @@ export default function Dashboard({ context, setContext, onScenario, profile, on
   const { tip, icon } = getTimeBasedTip(hour, profile)
   const streak = getStreakCount(profile?.weeklyCheckins)
   const todayChecked = profile?.weeklyCheckins?.some((c) => c.date === new Date().toISOString().split('T')[0])
+  const jetLag = getJetLagInfo(profile?.travelLog, profile?.homeBase)
+
+  const card = darkMode ? 'bg-warm-800 border-warm-700' : 'bg-white border-warm-200'
+  const cardShadow = darkMode ? '' : 'shadow-sm'
+  const textPrimary = darkMode ? 'text-warm-100' : 'text-warm-900'
+  const textSecondary = darkMode ? 'text-warm-400' : 'text-warm-500'
+  const textMuted = darkMode ? 'text-warm-500' : 'text-warm-400'
+  const inputBg = darkMode ? 'bg-warm-700 border-warm-600 text-warm-100 placeholder-warm-500' : 'bg-warm-50 border-warm-200 text-warm-800 placeholder-warm-300'
+  const pillActive = 'bg-sage-600 text-white shadow-md shadow-sage-600/20'
+  const pillInactive = darkMode ? 'bg-warm-700 text-warm-400 hover:bg-warm-600' : 'bg-warm-50 text-warm-500 hover:bg-warm-100'
 
   const submitCheckin = async () => {
-    setCheckinLoading(true)
-    onCheckin(checkinData)
-    try {
-      const resp = await axios.post(`${apiBase}/api/checkin-insight`, { profile, checkin: checkinData })
-      setCheckinInsight(resp.data.insight)
-    } catch { setCheckinInsight("Logged! Couldn't generate an insight right now, but your data is saved.") }
+    setCheckinLoading(true); onCheckin(checkinData)
+    try { const resp = await axios.post(`${apiBase}/api/checkin-insight`, { profile, checkin: checkinData }); setCheckinInsight(resp.data.insight) }
+    catch { setCheckinInsight("Logged! Couldn't generate an insight right now, but your data is saved.") }
     finally { setCheckinLoading(false) }
   }
 
-  const addManualEvent = () => {
-    if (!newEvent.title.trim() || !newEvent.time) return
-    const today = new Date().toISOString().split('T')[0]
-    const isoStart = `${today}T${newEvent.time}:00`
-    onAddEvent({ title: newEvent.title, start: isoStart, end: '', location: '' })
-    setNewEvent({ title: '', time: '' })
-    setShowAddEvent(false)
+  const handleAddMeal = () => {
+    if (!mealInput.trim()) return
+    addMeal(mealInput.trim()); setMealInput(''); setShowMealInput(false)
   }
 
-  // Filter manual events to show only today's
-  const todayStr = new Date().toISOString().split('T')[0]
-  const todayManualEvents = (manualEvents || []).filter((e) => e.start?.startsWith(todayStr))
+  const nearMePrompt = context.location
+    ? `I'm at ${context.location}. What are the best healthy food options within walking distance? Be specific — name types of places and what to order.`
+    : "I need to find healthy food near me. What types of places should I look for and what should I order?"
 
   return (
-    <div className="overflow-y-auto h-[calc(100vh-130px)] px-5 py-4 space-y-5">
-      {/* Greeting */}
+    <div className={`overflow-y-auto h-[calc(100vh-130px)] px-5 py-4 space-y-5`}>
+      {/* Greeting + Time */}
       <div className="animate-fade-in">
         <div className="flex items-start justify-between">
-          <h1 className="font-display text-2xl font-bold text-warm-900">{greeting}.</h1>
+          <h1 className={`font-display text-2xl font-bold ${textPrimary}`}>{greeting}.</h1>
           <div className="text-right flex-shrink-0 mt-1">
-            <p className="text-lg font-semibold text-warm-800 tabular-nums leading-tight">
+            <p className={`text-lg font-semibold tabular-nums leading-tight ${darkMode ? 'text-warm-200' : 'text-warm-800'}`}>
               {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
-            <p className="text-[10px] text-warm-400 mt-0.5">
+            <p className={`text-[10px] mt-0.5 ${textMuted}`}>
               {Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ')}
             </p>
           </div>
         </div>
-        <p className="text-warm-400 text-sm mt-1">{now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+        <p className={`text-sm mt-1 ${textMuted}`}>{now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</p>
       </div>
+
+      {/* Jet Lag Alert */}
+      {jetLag && (
+        <div className={`border rounded-2xl p-4 animate-slide-up ${darkMode ? 'bg-amber-900/20 border-amber-700/40' : 'bg-amber-50 border-amber-200'}`}>
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle size={14} className="text-amber-500" />
+            <p className={`text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>Jet lag recovery</p>
+          </div>
+          <p className={`text-sm leading-relaxed ${darkMode ? 'text-amber-200' : 'text-amber-800'}`}>
+            You flew {jetLag.from} → {jetLag.to} {jetLag.daysSince === 0 ? 'today' : `${jetLag.daysSince}d ago`}.
+            Prioritize hydration, avoid heavy meals for 24h, and get sunlight exposure to reset your circadian rhythm.
+          </p>
+          <button onClick={() => onScenario(`I just traveled from ${jetLag.from} (${jetLag.fromTz}) to ${jetLag.to} (${jetLag.toTz}) ${jetLag.daysSince === 0 ? 'today' : jetLag.daysSince + ' days ago'}. Give me a detailed jet lag recovery plan — what to eat, when to sleep, caffeine timing, and how to reset my body clock.`)}
+            className="mt-2 text-xs text-amber-600 hover:text-amber-800 font-medium transition-colors">
+            Get full recovery plan →
+          </button>
+        </div>
+      )}
+
+      {/* Hydration + Meal Tracker Row */}
+      <div className="flex gap-3 animate-slide-up">
+        {/* Hydration */}
+        <div className={`flex-1 border rounded-2xl p-4 ${card} ${cardShadow}`}>
+          <p className={`text-[10px] font-semibold uppercase tracking-wider mb-2 ${textMuted}`}>Water today</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Droplets size={18} className={todayWater >= 8 ? 'text-blue-500' : todayWater >= 4 ? 'text-blue-400' : 'text-warm-300'} />
+              <span className={`text-2xl font-bold tabular-nums ${textPrimary}`}>{todayWater}</span>
+              <span className={`text-xs ${textMuted}`}>/ 8</span>
+            </div>
+            <div className="flex gap-1">
+              <button onClick={removeWater} className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${darkMode ? 'bg-warm-700 text-warm-400 hover:bg-warm-600' : 'bg-warm-100 text-warm-400 hover:bg-warm-200'}`}>
+                <Minus size={12} />
+              </button>
+              <button onClick={addWater} className="w-7 h-7 rounded-lg bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-colors text-sm font-bold">+</button>
+            </div>
+          </div>
+          <div className="flex gap-0.5 mt-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i < todayWater ? 'bg-blue-400' : darkMode ? 'bg-warm-700' : 'bg-warm-100'}`} />
+            ))}
+          </div>
+        </div>
+
+        {/* Meals logged */}
+        <div className={`flex-1 border rounded-2xl p-4 ${card} ${cardShadow}`}>
+          <div className="flex items-center justify-between mb-2">
+            <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>Meals</p>
+            <button onClick={() => setShowMealInput(!showMealInput)} className="text-sage-600 hover:text-sage-800 transition-colors">
+              <UtensilsCrossed size={14} />
+            </button>
+          </div>
+          {todayMeals.length > 0 ? (
+            <div className="space-y-1">
+              {todayMeals.slice(-3).map((m, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className={`text-[10px] ${textMuted} w-12 flex-shrink-0`}>{m.time}</span>
+                  <span className={`text-xs truncate ${darkMode ? 'text-warm-300' : 'text-warm-600'}`}>{m.text}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className={`text-xs ${textMuted}`}>No meals logged yet</p>
+          )}
+        </div>
+      </div>
+
+      {/* Meal input */}
+      {showMealInput && (
+        <div className={`border rounded-xl p-3 flex gap-2 animate-slide-down ${card}`}>
+          <input type="text" value={mealInput} onChange={(e) => setMealInput(e.target.value)}
+            placeholder="What did you eat? (e.g. airport burrito)"
+            onKeyDown={(e) => e.key === 'Enter' && handleAddMeal()}
+            className={`flex-1 border rounded-lg px-3 py-2 text-sm outline-none focus:border-sage-400 transition-colors ${inputBg}`} />
+          <button onClick={handleAddMeal} disabled={!mealInput.trim()}
+            className="px-3 py-2 bg-sage-600 hover:bg-sage-700 disabled:bg-warm-200 disabled:text-warm-400 text-white text-sm font-medium rounded-lg transition-all">Log</button>
+        </div>
+      )}
 
       {/* Daily Check-in CTA */}
       {!todayChecked && !showCheckin && (
         <button onClick={() => setShowCheckin(true)}
-          className="w-full bg-white border border-warm-200 rounded-2xl p-5 text-left transition-all hover:shadow-md hover:border-sage-300 animate-slide-up group"
-        >
+          className={`w-full border rounded-2xl p-5 text-left transition-all hover:shadow-md animate-slide-up group ${card} ${darkMode ? 'hover:border-sage-600' : 'hover:border-sage-300'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${darkMode ? 'bg-sage-900' : 'bg-sage-50'}`}>
                 <Heart size={18} className="text-sage-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-warm-800">Daily check-in</p>
-                <p className="text-xs text-warm-400 mt-0.5">30 seconds — helps personalize your advice</p>
+                <p className={`text-sm font-semibold ${darkMode ? 'text-warm-200' : 'text-warm-800'}`}>Daily check-in</p>
+                <p className={`text-xs mt-0.5 ${textMuted}`}>30 seconds — helps personalize your advice</p>
               </div>
             </div>
-            <ChevronRight size={16} className="text-warm-300 group-hover:text-sage-500 group-hover:translate-x-0.5 transition-all" />
+            <ChevronRight size={16} className={`${textMuted} group-hover:text-sage-500 group-hover:translate-x-0.5 transition-all`} />
           </div>
           {streak > 0 && <p className="text-[11px] text-terra-500 mt-3 font-medium">🔥 {streak} day streak</p>}
         </button>
@@ -156,7 +248,7 @@ export default function Dashboard({ context, setContext, onScenario, profile, on
 
       {/* Check-in Form */}
       {showCheckin && !checkinInsight && (
-        <div className="bg-white border border-warm-200 rounded-2xl p-5 space-y-5 animate-slide-down shadow-sm">
+        <div className={`border rounded-2xl p-5 space-y-5 animate-slide-down ${card} ${cardShadow}`}>
           <p className="text-xs font-semibold text-sage-600 uppercase tracking-wider">Quick check-in</p>
           {[
             { label: "How's your energy?", field: 'energy', options: [{ v: '1', e: '😩' }, { v: '2', e: '😴' }, { v: '3', e: '😐' }, { v: '4', e: '🙂' }, { v: '5', e: '⚡' }] },
@@ -165,26 +257,19 @@ export default function Dashboard({ context, setContext, onScenario, profile, on
             { label: 'Hydration', field: 'hydration', options: ['Barely', 'Some', 'Decent', 'Good'].map((v) => ({ v, e: v })) },
           ].map(({ label, field, options }) => (
             <div key={field}>
-              <p className="text-xs text-warm-500 mb-2 font-medium">{label}</p>
+              <p className={`text-xs mb-2 font-medium ${textSecondary}`}>{label}</p>
               <div className="flex gap-2">
                 {options.map(({ v, e }) => (
                   <button key={v} onClick={() => setCheckinData((p) => ({ ...p, [field]: v }))}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      checkinData[field] === v
-                        ? 'bg-sage-600 text-white shadow-md shadow-sage-600/20'
-                        : 'bg-warm-50 text-warm-500 hover:bg-warm-100'
-                    }`}
-                  >{e}</button>
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${checkinData[field] === v ? pillActive : pillInactive}`}>{e}</button>
                 ))}
               </div>
             </div>
           ))}
           <input type="text" value={checkinData.notes} onChange={(e) => setCheckinData((p) => ({ ...p, notes: e.target.value }))}
-            placeholder="Anything else? (optional)"
-            className="w-full bg-warm-50 border border-warm-200 rounded-xl px-4 py-2.5 text-sm text-warm-800 outline-none placeholder-warm-300 focus:border-sage-400 focus:ring-2 focus:ring-sage-100 transition-all"
-          />
+            placeholder="Anything else? (optional)" className={`w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-sage-400 transition-all ${inputBg}`} />
           <div className="flex gap-2">
-            <button onClick={() => setShowCheckin(false)} className="px-4 py-2.5 bg-warm-50 text-warm-500 text-sm rounded-xl hover:bg-warm-100 transition-colors font-medium">Skip</button>
+            <button onClick={() => setShowCheckin(false)} className={`px-4 py-2.5 text-sm rounded-xl font-medium transition-colors ${pillInactive}`}>Skip</button>
             <button onClick={submitCheckin} disabled={!checkinData.energy || checkinLoading}
               className="flex-1 py-2.5 bg-sage-600 hover:bg-sage-700 disabled:bg-warm-200 disabled:text-warm-400 text-white font-semibold rounded-xl transition-all text-sm shadow-md shadow-sage-600/20 disabled:shadow-none"
             >{checkinLoading ? 'Saving...' : 'Check in'}</button>
@@ -194,143 +279,107 @@ export default function Dashboard({ context, setContext, onScenario, profile, on
 
       {/* Check-in Insight */}
       {checkinInsight && (
-        <div className="bg-sage-50 border border-sage-200 rounded-2xl p-5 animate-slide-up">
+        <div className={`border rounded-2xl p-5 animate-slide-up ${darkMode ? 'bg-sage-900/30 border-sage-700' : 'bg-sage-50 border-sage-200'}`}>
           <p className="text-xs font-semibold text-sage-600 uppercase tracking-wider mb-2">✓ Checked in {streak > 0 && `· ${streak + 1} day streak 🔥`}</p>
-          <p className="text-sm text-warm-700 leading-relaxed">{checkinInsight}</p>
+          <p className={`text-sm leading-relaxed ${darkMode ? 'text-sage-200' : 'text-warm-700'}`}>{checkinInsight}</p>
         </div>
       )}
 
       {/* Stats */}
       {profile?.weeklyCheckins?.length > 0 && !showCheckin && todayChecked && (
         <div className="flex gap-3 animate-fade-in">
-          <div className="flex-1 bg-white border border-warm-200 rounded-xl px-4 py-3 flex items-center gap-2.5">
+          <div className={`flex-1 border rounded-xl px-4 py-3 flex items-center gap-2.5 ${card}`}>
             <TrendingUp size={14} className="text-terra-500" />
-            <span className="text-xs text-warm-500"><span className="text-warm-800 font-semibold">{streak}</span> day streak</span>
+            <span className={`text-xs ${textSecondary}`}><span className={`font-semibold ${textPrimary}`}>{streak}</span> day streak</span>
           </div>
-          <div className="flex-1 bg-white border border-warm-200 rounded-xl px-4 py-3 flex items-center gap-2.5">
+          <div className={`flex-1 border rounded-xl px-4 py-3 flex items-center gap-2.5 ${card}`}>
             <Heart size={14} className="text-sage-500" />
-            <span className="text-xs text-warm-500"><span className="text-warm-800 font-semibold">{profile.weeklyCheckins.length}</span> check-ins</span>
+            <span className={`text-xs ${textSecondary}`}><span className={`font-semibold ${textPrimary}`}>{profile.weeklyCheckins.length}</span> check-ins</span>
           </div>
         </div>
       )}
 
       {/* Context */}
-      <div className="bg-white border border-warm-200 rounded-2xl p-5 shadow-sm">
-        <p className="text-xs font-semibold text-warm-400 uppercase tracking-wider mb-4">Your context</p>
+      <div className={`border rounded-2xl p-5 ${card} ${cardShadow}`}>
+        <p className={`text-xs font-semibold uppercase tracking-wider mb-4 ${textMuted}`}>Your context</p>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-sage-50 flex items-center justify-center flex-shrink-0">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${darkMode ? 'bg-sage-900' : 'bg-sage-50'}`}>
             <MapPin size={14} className="text-sage-600" />
           </div>
           <input type="text" placeholder="Where are you right now?"
             value={context.location} onChange={(e) => setContext((p) => ({ ...p, location: e.target.value }))}
-            className="flex-1 bg-transparent text-sm outline-none placeholder-warm-300 text-warm-800"
-          />
+            className={`flex-1 bg-transparent text-sm outline-none ${darkMode ? 'text-warm-100 placeholder-warm-600' : 'text-warm-800 placeholder-warm-300'}`} />
         </div>
-        <div className="border-t border-warm-100 pt-4">
-          <p className="text-xs text-warm-400 mb-2.5 flex items-center gap-1.5 font-medium"><Zap size={12} /> Energy level</p>
+        {/* What's near me button */}
+        {context.location && (
+          <button onClick={() => onScenario(nearMePrompt)}
+            className={`w-full mb-4 py-2.5 border border-dashed rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${darkMode ? 'border-sage-700 text-sage-400 hover:border-sage-500 hover:text-sage-300' : 'border-sage-300 text-sage-600 hover:border-sage-400 hover:bg-sage-50'}`}>
+            <Navigation size={12} /> What's healthy near {context.location}?
+          </button>
+        )}
+        <div className={`border-t pt-4 ${darkMode ? 'border-warm-700' : 'border-warm-100'}`}>
+          <p className={`text-xs mb-2.5 flex items-center gap-1.5 font-medium ${textMuted}`}><Zap size={12} /> Energy level</p>
           <div className="flex gap-2 flex-wrap">
             {ENERGY_LEVELS.map((level) => (
               <button key={level.id} onClick={() => setContext((p) => ({ ...p, energyLevel: level.id }))}
-                className={`text-xs px-3.5 py-2 rounded-full transition-all duration-200 font-medium ${
-                  context.energyLevel === level.id
-                    ? 'bg-sage-600 text-white shadow-md shadow-sage-600/20'
-                    : 'bg-warm-50 text-warm-500 hover:bg-warm-100'
-                }`}
-              >{level.label}</button>
+                className={`text-xs px-3.5 py-2 rounded-full transition-all duration-200 font-medium ${context.energyLevel === level.id ? pillActive : pillInactive}`}>{level.label}</button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Schedule */}
-      <div className="bg-white border border-warm-200 rounded-2xl p-5 shadow-sm">
+      {/* Google Calendar */}
+      <div className={`border rounded-2xl p-5 ${card} ${cardShadow}`}>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold text-warm-400 uppercase tracking-wider">Today's Schedule</p>
-          <button onClick={() => setShowAddEvent(!showAddEvent)}
-            className="text-xs text-sage-600 hover:text-sage-800 transition-colors font-medium bg-sage-50 px-2.5 py-1 rounded-full flex items-center gap-1"
-          ><Plus size={12} /> Add</button>
-        </div>
-
-        {/* Add event form */}
-        {showAddEvent && (
-          <div className="mb-4 p-3 bg-warm-50 rounded-xl space-y-2 animate-slide-down">
-            <input type="text" value={newEvent.title} onChange={(e) => setNewEvent((p) => ({ ...p, title: e.target.value }))}
-              placeholder="What's happening? (e.g. Press briefing)"
-              onKeyDown={(e) => e.key === 'Enter' && addManualEvent()}
-              className="w-full bg-white border border-warm-200 rounded-lg px-3 py-2 text-sm text-warm-800 outline-none placeholder-warm-300 focus:border-sage-400 transition-colors"
-            />
-            <div className="flex gap-2">
-              <input type="time" value={newEvent.time} onChange={(e) => setNewEvent((p) => ({ ...p, time: e.target.value }))}
-                className="flex-1 bg-white border border-warm-200 rounded-lg px-3 py-2 text-sm text-warm-800 outline-none focus:border-sage-400 transition-colors"
-              />
-              <button onClick={addManualEvent} disabled={!newEvent.title.trim() || !newEvent.time}
-                className="px-4 py-2 bg-sage-600 hover:bg-sage-700 disabled:bg-warm-200 disabled:text-warm-400 text-white text-sm font-medium rounded-lg transition-all"
-              >Add</button>
+          <p className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>Schedule</p>
+          {calendarConnected && (
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-sage-600 flex items-center gap-1 font-medium"><CheckCircle2 size={11} /> Connected</span>
+              <button onClick={async () => { setRefreshing(true); await onCalendarRefresh(); setRefreshing(false) }} className={`${textMuted} hover:text-sage-600 transition-colors`}>
+                <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
+              </button>
             </div>
-          </div>
-        )}
-
-        {/* Google Calendar status */}
-        {calendarConnected && (
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-[11px] text-sage-600 flex items-center gap-1 font-medium"><CheckCircle2 size={11} /> Google Calendar</span>
-            <button onClick={async () => { setRefreshing(true); await onCalendarRefresh(); setRefreshing(false) }} className="text-warm-300 hover:text-warm-500 transition-colors">
-              <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
-            </button>
-          </div>
-        )}
-
-        {/* Events list */}
-        {calendarEvents && calendarEvents.length > 0 ? (
-          <div>{calendarEvents.map((ev, i) => {
-            const until = timeUntil(ev.start); const isNext = i === 0
-            const isManual = todayManualEvents.some((m) => m.title === ev.title && m.start === ev.start)
-            const manualIndex = isManual ? manualEvents.findIndex((m) => m.title === ev.title && m.start === ev.start) : -1
-            return (
-              <div key={i} className={`flex gap-3 py-3 ${i > 0 ? 'border-t border-warm-100' : ''} group`}>
-                <div className="text-right flex-shrink-0 w-14">
-                  <p className="text-xs text-warm-500 tabular-nums">{formatEventTime(ev.start)}</p>
-                  {until && <p className={`text-[10px] tabular-nums ${isNext ? 'text-sage-600 font-medium' : 'text-warm-300'}`}>{until}</p>}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm truncate ${isNext ? 'text-warm-800 font-medium' : 'text-warm-600'}`}>{ev.title}</p>
-                  {ev.location && <p className="text-[11px] text-warm-400 truncate mt-0.5">{ev.location}</p>}
-                </div>
-                {isManual && manualIndex >= 0 && (
-                  <button onClick={() => onRemoveEvent(manualIndex)}
-                    className="text-warm-200 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 self-center"
-                    title="Remove"
-                  ><X size={14} /></button>
-                )}
-              </div>
-            )
-          })}</div>
+          )}
+        </div>
+        {calendarConnected && calendarEvents !== null ? (
+          calendarEvents.length === 0
+            ? <p className={`text-xs ${textMuted}`}>No upcoming events in the next 14 hours.</p>
+            : <div>{calendarEvents.map((ev, i) => {
+                const until = timeUntil(ev.start); const isNext = i === 0
+                return (
+                  <div key={i} className={`flex gap-3 py-3 ${i > 0 ? `border-t ${darkMode ? 'border-warm-700' : 'border-warm-100'}` : ''}`}>
+                    <div className="text-right flex-shrink-0 w-14">
+                      <p className={`text-xs tabular-nums ${textSecondary}`}>{formatEventTime(ev.start)}</p>
+                      {until && <p className={`text-[10px] tabular-nums ${isNext ? 'text-sage-600 font-medium' : textMuted}`}>{until}</p>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm truncate ${isNext ? `font-medium ${textPrimary}` : textSecondary}`}>{ev.title}</p>
+                      {ev.location && <p className={`text-[11px] truncate mt-0.5 ${textMuted}`}>{ev.location}</p>}
+                    </div>
+                  </div>
+                )
+              })}</div>
         ) : (
-          <div className="text-center py-3">
-            <p className="text-xs text-warm-400">No events yet. Add your schedule so the coach can time advice around it.</p>
-            {!calendarConnected && apiBase && (
-              <button onClick={() => { window.location.href = `${apiBase}/api/calendar/connect` }}
-                className="mt-2 text-[11px] text-sage-500 hover:text-sage-700 transition-colors font-medium"
-              >Or connect Google Calendar →</button>
-            )}
-          </div>
+          <button onClick={() => { window.location.href = `${apiBase}/api/calendar/connect` }}
+            className={`w-full py-4 border border-dashed rounded-xl text-sm flex items-center justify-center gap-2 transition-all ${darkMode ? 'border-warm-600 text-warm-500 hover:text-warm-300 hover:border-warm-500' : 'border-warm-300 text-warm-400 hover:text-warm-600 hover:border-warm-400'}`}>
+            <Calendar size={15} /> Connect Google Calendar
+          </button>
         )}
       </div>
 
       {/* Scenarios */}
       <div>
-        <p className="text-xs font-semibold text-warm-400 uppercase tracking-wider mb-3">What's your situation?</p>
+        <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${textMuted}`}>What's your situation?</p>
         <div className="grid grid-cols-2 gap-2.5">
           {SCENARIOS.map((s) => {
             const Icon = s.icon
             return (
               <button key={s.id} onClick={() => onScenario(s.message)}
-                className="bg-white border border-warm-200 rounded-2xl p-4 text-left transition-all duration-200 hover:shadow-md hover:border-warm-300 active:scale-[0.97]"
-              >
-                <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center mb-3`}>
+                className={`border rounded-2xl p-4 text-left transition-all duration-200 hover:shadow-md active:scale-[0.97] ${card} ${darkMode ? 'hover:border-warm-600' : 'hover:border-warm-300'}`}>
+                <div className={`w-9 h-9 rounded-xl ${darkMode ? 'bg-warm-700' : s.bg} flex items-center justify-center mb-3`}>
                   <Icon size={16} className={s.color} />
                 </div>
-                <span className="text-sm font-medium text-warm-700 leading-tight block">{s.label}</span>
+                <span className={`text-sm font-medium leading-tight block ${darkMode ? 'text-warm-300' : 'text-warm-700'}`}>{s.label}</span>
               </button>
             )
           })}
@@ -338,9 +387,9 @@ export default function Dashboard({ context, setContext, onScenario, profile, on
       </div>
 
       {/* Tip */}
-      <div className="bg-sage-50 border border-sage-200 rounded-2xl p-5">
+      <div className={`border rounded-2xl p-5 ${darkMode ? 'bg-sage-900/30 border-sage-700' : 'bg-sage-50 border-sage-200'}`}>
         <p className="text-xs font-semibold text-sage-600 uppercase tracking-wider mb-2">Right now — for you</p>
-        <p className="text-sm text-warm-700 leading-relaxed"><span className="mr-1.5">{icon}</span>{tip}</p>
+        <p className={`text-sm leading-relaxed ${darkMode ? 'text-sage-200' : 'text-warm-700'}`}><span className="mr-1.5">{icon}</span>{tip}</p>
       </div>
 
       <div className="h-3" />

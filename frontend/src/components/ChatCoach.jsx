@@ -26,7 +26,7 @@ function renderMarkdown(text) {
     .replace(/\n/g, '<br />')
 }
 
-export default function ChatCoach({ context, calendarEvents, initialMessage, onInitialMessageSent, profile, apiBase }) {
+export default function ChatCoach({ context, calendarEvents, initialMessage, onInitialMessageSent, profile, apiBase, darkMode, todayWater, todayMeals }) {
   const name = profile?.name || 'there'
   const [messages, setMessages] = useState([{
     role: 'assistant',
@@ -63,7 +63,12 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
     try {
       const resp = await axios.post(`${apiBase}/api/chat`, {
         messages: history, location: context.location || null,
-        energy_level: context.energyLevel || null, calendar_events: calendarEvents ?? null, profile: profile || null,
+        energy_level: context.energyLevel || null, calendar_events: calendarEvents ?? null,
+        profile: {
+          ...(profile || {}),
+          todayHydration: todayWater || 0,
+          todayMeals: (todayMeals || []).map((m) => `${m.time}: ${m.text}`).join(', ') || 'none logged',
+        },
       })
       setMessages((prev) => [...prev, { role: 'assistant', content: resp.data.response }])
     } catch {
@@ -83,7 +88,7 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
   }
 
   return (
-    <div className="flex flex-col h-full bg-warm-50">
+    <div className={`flex flex-col h-full ${darkMode ? 'bg-warm-900' : 'bg-warm-50'}`}>
       {/* Context banner */}
       {(context.location || (context.energyLevel && context.energyLevel !== 'normal')) && (
         <div className="px-5 py-2 bg-white border-b border-warm-200 flex gap-3 text-xs text-warm-500 flex-shrink-0">
