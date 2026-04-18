@@ -1,4 +1,15 @@
-# Real secrets — never commit these
+# Secrets
 backend/.env
 backend/credentials.json
 backend/token.json
+
+# Dependencies & build
+node_modules/
+dist/
+venv/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+.vscode/
