@@ -36,6 +36,12 @@ export default function App() {
   const [initialMessage, setInitialMessage] = useState(null)
   const [calendarConnected, setCalendarConnected] = useState(false)
   const [calendarEvents, setCalendarEvents] = useState(null)
+  const [manualEvents, setManualEvents] = useState(() => {
+    try {
+      const saved = localStorage.getItem('fieldfit_schedule')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
 
   const [profile, setProfile] = useState(() => {
     try {
@@ -49,6 +55,21 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile))
   }, [profile])
+
+  // Persist manual schedule
+  useEffect(() => {
+    localStorage.setItem('fieldfit_schedule', JSON.stringify(manualEvents))
+  }, [manualEvents])
+
+  // Merge Google Calendar events with manual events for the AI context
+  const allEvents = [
+    ...(calendarEvents || []),
+    ...manualEvents.filter((e) => {
+      // Only include today's manual events
+      const today = new Date().toISOString().split('T')[0]
+      return e.start?.startsWith(today)
+    }),
+  ].sort((a, b) => (a.start || '').localeCompare(b.start || ''))
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -106,6 +127,14 @@ export default function App() {
     }))
   }
 
+  const handleAddEvent = (event) => {
+    setManualEvents((prev) => [...prev.slice(-20), event])
+  }
+
+  const handleRemoveEvent = (index) => {
+    setManualEvents((prev) => prev.filter((_, i) => i !== index))
+  }
+
   if (!profile.onboarded) {
     return <Onboarding onComplete={handleOnboardingComplete} />
   }
@@ -135,15 +164,18 @@ export default function App() {
             profile={profile}
             onCheckin={handleCheckin}
             calendarConnected={calendarConnected}
-            calendarEvents={calendarEvents}
+            calendarEvents={allEvents}
             onCalendarRefresh={fetchCalendarEvents}
+            manualEvents={manualEvents}
+            onAddEvent={handleAddEvent}
+            onRemoveEvent={handleRemoveEvent}
             apiBase={API_BASE}
           />
         </div>
         <div className={activeTab === 'coach' ? 'block h-[calc(100vh-130px)]' : 'hidden'}>
           <ChatCoach
             context={context}
-            calendarEvents={calendarEvents}
+            calendarEvents={allEvents}
             initialMessage={initialMessage}
             onInitialMessageSent={() => setInitialMessage(null)}
             profile={profile}

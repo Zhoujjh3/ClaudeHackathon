@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   MapPin, Zap, Plane, Moon, Coffee, Clock, Wind, Flame,
-  ChevronRight, TrendingUp, Calendar, CheckCircle2, RefreshCw, Heart,
+  ChevronRight, TrendingUp, Calendar, CheckCircle2, RefreshCw, Heart, Plus, X,
 } from 'lucide-react'
 import axios from 'axios'
 
@@ -73,13 +73,15 @@ function timeUntil(iso) {
   } catch { return '' }
 }
 
-export default function Dashboard({ context, setContext, onScenario, profile, onCheckin, calendarConnected, calendarEvents, onCalendarRefresh, apiBase }) {
+export default function Dashboard({ context, setContext, onScenario, profile, onCheckin, calendarConnected, calendarEvents, onCalendarRefresh, manualEvents, onAddEvent, onRemoveEvent, apiBase }) {
   const [now, setNow] = useState(new Date())
   const [showCheckin, setShowCheckin] = useState(false)
   const [checkinData, setCheckinData] = useState({ energy: '', sleepHours: '', mealQuality: '', hydration: '', notes: '' })
   const [checkinInsight, setCheckinInsight] = useState(null)
   const [checkinLoading, setCheckinLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [showAddEvent, setShowAddEvent] = useState(false)
+  const [newEvent, setNewEvent] = useState({ title: '', time: '' })
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 60000); return () => clearInterval(t) }, [])
 
@@ -99,6 +101,19 @@ export default function Dashboard({ context, setContext, onScenario, profile, on
     } catch { setCheckinInsight("Logged! Couldn't generate an insight right now, but your data is saved.") }
     finally { setCheckinLoading(false) }
   }
+
+  const addManualEvent = () => {
+    if (!newEvent.title.trim() || !newEvent.time) return
+    const today = new Date().toISOString().split('T')[0]
+    const isoStart = `${today}T${newEvent.time}:00`
+    onAddEvent({ title: newEvent.title, start: isoStart, end: '', location: '' })
+    setNewEvent({ title: '', time: '' })
+    setShowAddEvent(false)
+  }
+
+  // Filter manual events to show only today's
+  const todayStr = new Date().toISOString().split('T')[0]
+  const todayManualEvents = (manualEvents || []).filter((e) => e.start?.startsWith(todayStr))
 
   return (
     <div className="overflow-y-auto h-[calc(100vh-130px)] px-5 py-4 space-y-5">
@@ -227,41 +242,78 @@ export default function Dashboard({ context, setContext, onScenario, profile, on
         </div>
       </div>
 
-      {/* Calendar */}
+      {/* Schedule */}
       <div className="bg-white border border-warm-200 rounded-2xl p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold text-warm-400 uppercase tracking-wider">Schedule</p>
-          {calendarConnected && (
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-sage-600 flex items-center gap-1 font-medium"><CheckCircle2 size={11} /> Connected</span>
-              <button onClick={async () => { setRefreshing(true); await onCalendarRefresh(); setRefreshing(false) }} className="text-warm-300 hover:text-warm-500 transition-colors">
-                <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
-              </button>
-            </div>
-          )}
+          <p className="text-xs font-semibold text-warm-400 uppercase tracking-wider">Today's Schedule</p>
+          <button onClick={() => setShowAddEvent(!showAddEvent)}
+            className="text-xs text-sage-600 hover:text-sage-800 transition-colors font-medium bg-sage-50 px-2.5 py-1 rounded-full flex items-center gap-1"
+          ><Plus size={12} /> Add</button>
         </div>
-        {calendarConnected && calendarEvents !== null ? (
-          calendarEvents.length === 0
-            ? <p className="text-xs text-warm-400">No upcoming events in the next 14 hours.</p>
-            : <div>{calendarEvents.map((ev, i) => {
-                const until = timeUntil(ev.start); const isNext = i === 0
-                return (
-                  <div key={i} className={`flex gap-3 py-3 ${i > 0 ? 'border-t border-warm-100' : ''}`}>
-                    <div className="text-right flex-shrink-0 w-14">
-                      <p className="text-xs text-warm-500 tabular-nums">{formatEventTime(ev.start)}</p>
-                      {until && <p className={`text-[10px] tabular-nums ${isNext ? 'text-sage-600 font-medium' : 'text-warm-300'}`}>{until}</p>}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm truncate ${isNext ? 'text-warm-800 font-medium' : 'text-warm-600'}`}>{ev.title}</p>
-                      {ev.location && <p className="text-[11px] text-warm-400 truncate mt-0.5">{ev.location}</p>}
-                    </div>
-                  </div>
-                )
-              })}</div>
+
+        {/* Add event form */}
+        {showAddEvent && (
+          <div className="mb-4 p-3 bg-warm-50 rounded-xl space-y-2 animate-slide-down">
+            <input type="text" value={newEvent.title} onChange={(e) => setNewEvent((p) => ({ ...p, title: e.target.value }))}
+              placeholder="What's happening? (e.g. Press briefing)"
+              onKeyDown={(e) => e.key === 'Enter' && addManualEvent()}
+              className="w-full bg-white border border-warm-200 rounded-lg px-3 py-2 text-sm text-warm-800 outline-none placeholder-warm-300 focus:border-sage-400 transition-colors"
+            />
+            <div className="flex gap-2">
+              <input type="time" value={newEvent.time} onChange={(e) => setNewEvent((p) => ({ ...p, time: e.target.value }))}
+                className="flex-1 bg-white border border-warm-200 rounded-lg px-3 py-2 text-sm text-warm-800 outline-none focus:border-sage-400 transition-colors"
+              />
+              <button onClick={addManualEvent} disabled={!newEvent.title.trim() || !newEvent.time}
+                className="px-4 py-2 bg-sage-600 hover:bg-sage-700 disabled:bg-warm-200 disabled:text-warm-400 text-white text-sm font-medium rounded-lg transition-all"
+              >Add</button>
+            </div>
+          </div>
+        )}
+
+        {/* Google Calendar status */}
+        {calendarConnected && (
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[11px] text-sage-600 flex items-center gap-1 font-medium"><CheckCircle2 size={11} /> Google Calendar</span>
+            <button onClick={async () => { setRefreshing(true); await onCalendarRefresh(); setRefreshing(false) }} className="text-warm-300 hover:text-warm-500 transition-colors">
+              <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        )}
+
+        {/* Events list */}
+        {calendarEvents && calendarEvents.length > 0 ? (
+          <div>{calendarEvents.map((ev, i) => {
+            const until = timeUntil(ev.start); const isNext = i === 0
+            const isManual = todayManualEvents.some((m) => m.title === ev.title && m.start === ev.start)
+            const manualIndex = isManual ? manualEvents.findIndex((m) => m.title === ev.title && m.start === ev.start) : -1
+            return (
+              <div key={i} className={`flex gap-3 py-3 ${i > 0 ? 'border-t border-warm-100' : ''} group`}>
+                <div className="text-right flex-shrink-0 w-14">
+                  <p className="text-xs text-warm-500 tabular-nums">{formatEventTime(ev.start)}</p>
+                  {until && <p className={`text-[10px] tabular-nums ${isNext ? 'text-sage-600 font-medium' : 'text-warm-300'}`}>{until}</p>}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm truncate ${isNext ? 'text-warm-800 font-medium' : 'text-warm-600'}`}>{ev.title}</p>
+                  {ev.location && <p className="text-[11px] text-warm-400 truncate mt-0.5">{ev.location}</p>}
+                </div>
+                {isManual && manualIndex >= 0 && (
+                  <button onClick={() => onRemoveEvent(manualIndex)}
+                    className="text-warm-200 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 self-center"
+                    title="Remove"
+                  ><X size={14} /></button>
+                )}
+              </div>
+            )
+          })}</div>
         ) : (
-          <button onClick={() => { window.location.href = `${apiBase}/api/calendar/connect` }}
-            className="w-full py-4 border border-dashed border-warm-300 rounded-xl text-sm text-warm-400 hover:text-warm-600 hover:border-warm-400 transition-all flex items-center justify-center gap-2"
-          ><Calendar size={15} /> Connect Google Calendar</button>
+          <div className="text-center py-3">
+            <p className="text-xs text-warm-400">No events yet. Add your schedule so the coach can time advice around it.</p>
+            {!calendarConnected && apiBase && (
+              <button onClick={() => { window.location.href = `${apiBase}/api/calendar/connect` }}
+                className="mt-2 text-[11px] text-sage-500 hover:text-sage-700 transition-colors font-medium"
+              >Or connect Google Calendar →</button>
+            )}
+          </div>
         )}
       </div>
 
