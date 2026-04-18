@@ -15,7 +15,7 @@ try:
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import Flow
-    from googleapiclient.discovery import build
+    from googleapiclient.discovery import build as build_service
     GOOGLE_AVAILABLE = True
 except ImportError:
     GOOGLE_AVAILABLE = False
@@ -38,7 +38,11 @@ SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/calendar/callback")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
-SYSTEM_PROMPT = """You are FieldFit Coach — a personal health advisor built exclusively for national correspondents and journalists with chaotic, demanding schedules.
+
+# ── Profile-aware system prompt builder ──────────────────────────────────────
+
+def build_system_prompt(profile: Optional[dict] = None) -> str:
+    base = """You are FieldFit Coach — a deeply personal health advisor built exclusively for national correspondents and journalists with chaotic, demanding schedules.
 
 You deeply understand your user:
 - Travels constantly, crossing multiple time zones every week
@@ -52,7 +56,9 @@ Your communication rules (never break these):
 - Use short bullet points, never paragraphs
 - Be hyper-specific: "order the grilled salmon with steamed vegetables, skip the sauce" not "eat lean protein"
 - Acknowledge the chaos — never suggest meal prep, cooking from scratch, or complex routines
-- Keep responses under 200 words unless doing a full analysis
+- Keep responses under 200 words unless doing a detailed analysis
+- Reference the user's personal profile, dietary needs, and goals in every response
+- Track patterns: if they mention eating late repeatedly, address the pattern
 
 Time-of-day intelligence:
 - Before 9am: sustained energy, skip sugar spikes
@@ -62,12 +68,44 @@ Time-of-day intelligence:
 - Post red-eye: electrolytes, anti-inflammatory foods, skip anything that spikes cortisol further
 
 When calendar events are provided:
-- Reference specific upcoming events to time nutrition advice: "You have a press briefing in 90 minutes — eat now so you're not hungry mid-meeting"
-- Flag tight schedules: "You're booked solid 2-6pm — this window right now is your only real meal chance"
-- Spot gaps as eating opportunities: "You have 45 minutes free at 1pm — that's your window"
+- Reference specific upcoming events to time nutrition advice
+- Flag tight schedules and spot gaps as eating opportunities
 - If back-to-back with no gaps: suggest snacks they can eat during brief pauses
 
-Always remember and reference what the user has shared: location, energy level, upcoming schedule. Be their on-the-ground health partner."""
+Always remember and reference what the user has told you: location, energy level, recent meals, their profile, their goals. Be their on-the-ground health partner, not a textbook."""
+
+    if profile:
+        profile_section = "\n\n--- USER PROFILE (always factor this into every response) ---"
+        if profile.get("name"):
+            profile_section += f"\nName: {profile['name']}"
+        if profile.get("dietaryRestrictions") and len(profile["dietaryRestrictions"]) > 0:
+            profile_section += f"\nDietary restrictions: {', '.join(profile['dietaryRestrictions'])}"
+        if profile.get("healthGoals") and len(profile["healthGoals"]) > 0:
+            profile_section += f"\nHealth goals: {', '.join(profile['healthGoals'])}"
+        if profile.get("travelFrequency"):
+            profile_section += f"\nTravel frequency: {profile['travelFrequency']}"
+        if profile.get("sleepPattern"):
+            profile_section += f"\nTypical sleep pattern: {profile['sleepPattern']}"
+        if profile.get("caffeineHabit"):
+            profile_section += f"\nCaffeine habit: {profile['caffeineHabit']}"
+        if profile.get("sensitivities"):
+            profile_section += f"\nFood sensitivities/allergies: {profile['sensitivities']}"
+        if profile.get("homeBase"):
+            profile_section += f"\nHome base timezone: {profile['homeBase']}"
+        if profile.get("travelLog") and len(profile["travelLog"]) > 0:
+            recent = profile["travelLog"][-5:]
+            profile_section += "\nRecent travel log:"
+            for entry in recent:
+                profile_section += f"\n  - {entry.get('date', '?')}: {entry.get('city', '?')} ({entry.get('timezone', '?')})"
+        if profile.get("weeklyCheckins") and len(profile["weeklyCheckins"]) > 0:
+            recent_checkins = profile["weeklyCheckins"][-7:]
+            profile_section += "\nRecent daily check-ins:"
+            for c in recent_checkins:
+                profile_section += f"\n  - {c.get('date', '?')}: energy={c.get('energy', '?')}, sleep={c.get('sleepHours', '?')}h, meals={c.get('mealQuality', '?')}, hydration={c.get('hydration', '?')}"
+        profile_section += "\n--- END PROFILE ---"
+        base += profile_section
+
+    return base
 
 
 # ── Calendar helpers ─────────────────────────────────────────────────────────
@@ -81,7 +119,7 @@ def get_calendar_service():
             creds.refresh(Request())
             with open(TOKEN_FILE, "w") as f:
                 f.write(creds.to_json())
-        return build("calendar", "v3", credentials=creds) if creds.valid else None
+        return build_service("calendar", "v3", credentials=creds) if creds.valid else None
     except Exception:
         return None
 
@@ -126,13 +164,23 @@ class ChatRequest(BaseModel):
     location: Optional[str] = None
     energy_level: Optional[str] = None
     calendar_events: Optional[List[dict]] = None
+    profile: Optional[dict] = None
+
+
+class BriefingRequest(BaseModel):
+    profile: dict
+
+
+class CheckinRequest(BaseModel):
+    profile: dict
+    checkin: dict
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
-    return {"status": "FieldFit API running", "version": "1.0"}
+    return {"status": "FieldFit API running", "version": "2.0"}
 
 
 @app.post("/api/chat")
@@ -150,7 +198,6 @@ async def chat(request: ChatRequest):
 
     api_messages = [{"role": m.role, "content": m.content} for m in request.messages]
 
-    # Inject live context into the last user message
     if api_messages and api_messages[-1]["role"] == "user":
         last = api_messages[-1]
         note = f"\n[Context: {context_str}]"
@@ -166,10 +213,70 @@ async def chat(request: ChatRequest):
         response = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=800,
-            system=SYSTEM_PROMPT,
+            system=build_system_prompt(request.profile),
             messages=api_messages,
         )
         return {"response": response.content[0].text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/weekly-briefing")
+async def weekly_briefing(request: BriefingRequest):
+    profile = request.profile
+    now = datetime.now()
+
+    prompt = f"""Generate a personalized weekly health briefing for this journalist.
+Today is {now.strftime('%A, %B %d')}.
+
+Based on their profile and recent data, provide:
+1. **Week Summary** — 2-3 sentences on how their week went health-wise
+2. **Pattern Alert** — any concerning patterns you see (sleep, eating, energy)
+3. **Win** — one thing they did well this week (find something positive)
+4. **Focus for Next Week** — one specific, actionable thing to improve
+5. **Road Warrior Tip** — one travel-specific health tip personalized to their upcoming schedule
+
+Keep the entire briefing under 250 words. Be warm but direct. Use their name if available."""
+
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=500,
+            system=build_system_prompt(profile),
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return {"briefing": response.content[0].text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/checkin-insight")
+async def checkin_insight(request: CheckinRequest):
+    checkin = request.checkin
+    now = datetime.now()
+
+    prompt = f"""The user just completed a daily health check-in at {now.strftime('%I:%M %p on %A')}.
+
+Today's check-in:
+- Energy level: {checkin.get('energy', 'not reported')}
+- Sleep last night: {checkin.get('sleepHours', 'not reported')} hours
+- Meal quality today: {checkin.get('mealQuality', 'not reported')}
+- Hydration: {checkin.get('hydration', 'not reported')}
+- Notes: {checkin.get('notes', 'none')}
+
+Give a brief, personalized response (under 100 words):
+- Acknowledge how they're doing
+- One specific tip for the rest of today based on this check-in
+- If you see a pattern from their recent check-ins, mention it briefly"""
+
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=200,
+            system=build_system_prompt(request.profile),
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return {"insight": response.content[0].text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

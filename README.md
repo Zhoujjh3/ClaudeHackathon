@@ -1,23 +1,37 @@
 # FieldFit
 
-An AI health coach designed for national correspondents and journalists. Built for real life — airports, hotel rooms, 2am deadlines, and post red-eye recoveries.
+A personalized AI health coach designed for national correspondents and journalists. Built for real life — airports, hotel rooms, 2am deadlines, and post red-eye recoveries.
 
-## Features
+## What it does
 
-**Dashboard** — Set your location and energy level. Quick-tap scenario buttons (airport, post red-eye, on deadline, late-night shift) send pre-loaded context to the coach. Connects to Google Calendar to show your day's schedule and feed that context into every AI response.
+**Personalized Onboarding** — 60-second setup captures your dietary restrictions, health goals, travel frequency, sleep patterns, caffeine habits, and food sensitivities. Every piece of advice is shaped by your profile.
 
-**Coach** — Chat with an AI health advisor that knows you're on the road. Attach food photos directly in chat. Automatically receives your location, energy level, and upcoming calendar events so advice is always calibrated to right now.
+**Dashboard** — Quick-tap scenario buttons for your exact situation: at the airport, post red-eye, on deadline, late-night shift. Daily check-ins track your energy, sleep, meals, and hydration — the coach learns your patterns over time. Time-aware tips rotate based on the hour and your personal goals. Google Calendar integration shows your schedule and times nutrition advice around your meetings.
+
+**Coach** — Chat with an AI health advisor that knows your dietary needs, your goals, your travel schedule, and your current energy level. Attach food photos for instant analysis. Your full profile and calendar are silently injected into every conversation so the advice is always personal.
+
+**My Profile** — Travel log to track timezone shifts and jet lag impact. Weekly AI-generated health briefings based on your check-in data. Edit your dietary needs, goals, and lifestyle settings anytime. View your check-in history and streaks.
+
+## Key features
+
+- **Profile-aware AI**: Every response factors in dietary restrictions, allergies, health goals, sleep pattern, and caffeine habits
+- **Daily check-ins**: 30-second energy/sleep/meal/hydration tracking with AI-generated insights
+- **Travel log**: Track city + timezone hops so the coach understands your jet lag state
+- **Weekly briefings**: AI-generated health summaries based on accumulated check-in data
+- **Google Calendar**: Schedule-aware nutrition timing ("You have 45 min free at 1pm — that's your meal window")
+- **Adaptive tips**: Dashboard tips change based on your profile (heavy caffeine users get different advice)
+- **Streak tracking**: Gamified consistency to encourage daily health awareness
+- **Food photo analysis**: Attach photos in chat for instant nutritional breakdown
 
 ## Stack
 
 - **Frontend**: React + Vite + Tailwind CSS
 - **Backend**: Python FastAPI
-- **AI**: Claude claude-sonnet-4-6
+- **AI**: Claude claude-sonnet-4-6 (vision + text)
 - **Calendar**: Google Calendar API (optional)
+- **Storage**: localStorage (profile, check-ins, travel log)
 
----
-
-## Local development
+## Setup
 
 ### Backend
 
@@ -28,10 +42,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# Edit .env: add ANTHROPIC_API_KEY
+# Add your ANTHROPIC_API_KEY to .env
 
 uvicorn main:app --reload
-# → http://localhost:8000
+# API runs on http://localhost:8000
 ```
 
 ### Frontend
@@ -40,96 +54,19 @@ uvicorn main:app --reload
 cd frontend
 npm install
 npm run dev
-# → http://localhost:3000
+# App runs on http://localhost:3000
 ```
 
----
+Open http://localhost:3000.
 
-## Google Calendar setup
+### Google Calendar (optional)
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a project → Enable **Google Calendar API**
-3. Go to **Credentials** → Create **OAuth 2.0 Client ID** → type: **Web application**
-4. Add authorized redirect URI:
-   - Local: `http://localhost:8000/api/calendar/callback`
-   - Server: `http://YOUR_SERVER_IP/api/calendar/callback` (if using nginx on port 80)
-5. Download `credentials.json` → place it in `backend/credentials.json`
-6. Add to `backend/.env`:
-
-```
-GOOGLE_REDIRECT_URI=http://localhost:8000/api/calendar/callback
-FRONTEND_URL=http://localhost:3000
-```
-
-7. In the app, click **Connect Google Calendar** in the Dashboard. You'll be redirected to Google's auth page. After approving, you're connected — your schedule now feeds into every coach response.
-
----
-
-## Deploying to your server
-
-### One-time setup on the server
-
-```bash
-# Copy files to server
-scp -r . user@your-server:~/fieldfit
-
-# SSH in
-ssh user@your-server
-cd ~/fieldfit
-
-# Backend setup
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your keys
-
-# Frontend build
-cd ../frontend
-npm install
-npm run build   # outputs to frontend/dist/
-```
-
-### Start services
-
-```bash
-chmod +x start.sh
-./start.sh
-```
-
-Uses `screen` to keep both processes running after you disconnect. To check logs:
-
-```bash
-screen -r fieldfit-backend
-screen -r fieldfit-frontend
-# Detach: Ctrl+A then D
-```
-
-### Optional: nginx (recommended for port 80 + clean URLs)
-
-1. Build frontend with empty API URL so calls are relative:
-   ```bash
-   cd frontend
-   VITE_API_URL="" npm run build
-   ```
-2. Edit `deploy/nginx.conf` — update `root` path and `server_name`
-3. Install and enable:
-   ```bash
-   sudo cp deploy/nginx.conf /etc/nginx/sites-available/fieldfit
-   sudo ln -s /etc/nginx/sites-available/fieldfit /etc/nginx/sites-enabled/
-   sudo nginx -t && sudo systemctl reload nginx
-   ```
-4. Update Google Cloud Console redirect URI to `http://your-server-ip/api/calendar/callback`
-5. Update `backend/.env`:
-   ```
-   GOOGLE_REDIRECT_URI=http://your-server-ip/api/calendar/callback
-   FRONTEND_URL=http://your-server-ip
-   ```
-
-With nginx, the app runs on port 80 — no port numbers in the URL.
-
----
+1. Create a project in Google Cloud Console
+2. Enable the Google Calendar API
+3. Create OAuth 2.0 credentials (Web application)
+4. Set redirect URI to `http://localhost:8000/api/calendar/callback`
+5. Download `credentials.json` to the `backend/` directory
+6. Click "Connect Google Calendar" in the app
 
 ## Environment variables
 
@@ -140,7 +77,19 @@ GOOGLE_REDIRECT_URI=http://localhost:8000/api/calendar/callback
 FRONTEND_URL=http://localhost:3000
 ```
 
-**frontend** (only needed in dev — leave unset in production with nginx)
+**frontend** (optional — defaults to localhost:8000)
 ```
 VITE_API_URL=http://localhost:8000
 ```
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/chat` | POST | Profile-aware AI chat with context injection |
+| `/api/weekly-briefing` | POST | AI-generated weekly health summary |
+| `/api/checkin-insight` | POST | Personalized feedback on daily check-in |
+| `/api/calendar/status` | GET | Check Google Calendar connection |
+| `/api/calendar/connect` | GET | Start OAuth flow |
+| `/api/calendar/events` | GET | Fetch upcoming events |
+| `/api/calendar/disconnect` | DELETE | Remove calendar connection |

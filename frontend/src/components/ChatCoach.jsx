@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, ImagePlus, X, Loader2, MapPin, Zap, Calendar } from 'lucide-react'
+import { Send, ImagePlus, X, Loader2, MapPin, Zap, Calendar, Sparkles } from 'lucide-react'
 import axios from 'axios'
 
 const SUGGESTED_PROMPTS = [
@@ -9,6 +9,8 @@ const SUGGESTED_PROMPTS = [
   "I have 5 minutes to grab something — what do I do?",
   "How do I handle eating across multiple time zones in one week?",
   "What snacks should I always keep in my bag on assignment?",
+  "I keep stress-eating on deadline nights. Help me break the cycle.",
+  "Build me a convenience store survival kit under $15.",
 ]
 
 function renderMarkdown(text) {
@@ -23,12 +25,14 @@ function renderMarkdown(text) {
     .replace(/\n/g, '<br />')
 }
 
-export default function ChatCoach({ context, calendarEvents, initialMessage, onInitialMessageSent, apiBase }) {
+export default function ChatCoach({ context, calendarEvents, initialMessage, onInitialMessageSent, profile, apiBase }) {
+  const name = profile?.name || 'there'
+  const restrictions = profile?.dietaryRestrictions?.filter((r) => r !== 'No restrictions') || []
+
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content:
-        "I'm FieldFit Coach — built for journalists in the field. Tell me where you are, what's available to eat, or ask anything. I'll give you immediate, practical advice.\n\nNo meal prep. No nonsense. Just what to do right now.",
+      content: `Hey ${name} — I'm your FieldFit Coach. I know your dietary needs, your goals, and your schedule. Ask me anything about eating on the road, staying sharp on deadline, or managing energy through the chaos.\n\nNo meal prep. No nonsense. Just what works for you, right now.`,
     },
   ])
   const [input, setInput] = useState('')
@@ -51,10 +55,7 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
       let userApiContent
       if (imageData) {
         userApiContent = [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: imageData.type, data: imageData.preview.split(',')[1] },
-          },
+          { type: 'image', source: { type: 'base64', media_type: imageData.type, data: imageData.preview.split(',')[1] } },
           { type: 'text', text: text || 'What do you think of this food?' },
         ]
       } else {
@@ -68,7 +69,6 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
       }
       setMessages((prev) => [...prev, displayMsg])
 
-      // Build history — convert image messages to text placeholders for history
       const history = messages.map((m) => ({
         role: m.role,
         content: m.imagePreview ? `[User shared a food photo] ${m.content}` : m.content,
@@ -81,21 +81,19 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
           location: context.location || null,
           energy_level: context.energyLevel || null,
           calendar_events: calendarEvents ?? null,
+          profile: profile || null,
         })
         setMessages((prev) => [...prev, { role: 'assistant', content: resp.data.response }])
       } catch {
         setMessages((prev) => [
           ...prev,
-          {
-            role: 'assistant',
-            content: 'Connection issue — make sure the backend is running, then try again.',
-          },
+          { role: 'assistant', content: 'Connection issue — make sure the backend is running, then try again.' },
         ])
       } finally {
         setLoading(false)
       }
     },
-    [messages, context, calendarEvents, apiBase]
+    [messages, context, calendarEvents, profile, apiBase]
   )
 
   useEffect(() => {
@@ -129,7 +127,7 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
     e.target.value = ''
   }
 
-  const hasContext = context.location || (context.energyLevel && context.energyLevel !== 'normal') || calendarEvents
+  const hasContext = context.location || (context.energyLevel && context.energyLevel !== 'normal') || calendarEvents || restrictions.length > 0
 
   return (
     <div className="flex flex-col h-full">
@@ -137,19 +135,16 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
       {hasContext && (
         <div className="px-4 py-2 bg-[#0a160a] border-b border-green-900/30 flex gap-3 text-xs text-green-500 flex-shrink-0 flex-wrap">
           {context.location && (
-            <span className="flex items-center gap-1">
-              <MapPin size={11} /> {context.location}
-            </span>
+            <span className="flex items-center gap-1"><MapPin size={11} /> {context.location}</span>
           )}
           {context.energyLevel && context.energyLevel !== 'normal' && (
-            <span className="flex items-center gap-1">
-              <Zap size={11} /> {context.energyLevel}
-            </span>
+            <span className="flex items-center gap-1"><Zap size={11} /> {context.energyLevel}</span>
           )}
           {calendarEvents && calendarEvents.length > 0 && (
-            <span className="flex items-center gap-1">
-              <Calendar size={11} /> {calendarEvents.length} event{calendarEvents.length !== 1 ? 's' : ''} today
-            </span>
+            <span className="flex items-center gap-1"><Calendar size={11} /> {calendarEvents.length} event{calendarEvents.length !== 1 ? 's' : ''}</span>
+          )}
+          {restrictions.length > 0 && (
+            <span className="flex items-center gap-1 text-green-700"><Sparkles size={11} /> {restrictions.join(', ')}</span>
           )}
         </div>
       )}
@@ -157,10 +152,7 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex gap-2.5 animate-slide-up ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+          <div key={i} className={`flex gap-2.5 animate-slide-up ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'assistant' && (
               <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-black text-[10px] font-black flex-shrink-0 mt-1 shadow-md shadow-green-900/40">
                 FF
@@ -169,7 +161,7 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
             <div
               className={`max-w-[84%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-green-600 text-white rounded-tr-md'
+                  ? 'bg-green-600 text-white rounded-tr-md shadow-lg shadow-green-900/20'
                   : 'bg-[#111] border border-[#1e1e1e] text-gray-200 rounded-tl-md'
               }`}
             >
@@ -187,9 +179,7 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
 
         {loading && (
           <div className="flex gap-2.5 justify-start animate-fade-in">
-            <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-black text-[10px] font-black flex-shrink-0 mt-1">
-              FF
-            </div>
+            <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-black text-[10px] font-black flex-shrink-0 mt-1">FF</div>
             <div className="bg-[#111] border border-[#1e1e1e] rounded-2xl rounded-tl-md px-4 py-3 flex items-center gap-2">
               <Loader2 size={14} className="animate-spin text-green-400" />
               <span className="text-xs text-gray-500">Thinking...</span>
@@ -240,27 +230,20 @@ export default function ChatCoach({ context, calendarEvents, initialMessage, onI
           >
             <ImagePlus size={20} />
           </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={handleImageSelect}
-          />
+          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelect} />
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask anything, or send a food photo..."
-            className="flex-1 bg-[#111] border border-[#1e1e1e] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-700 outline-none resize-none focus:border-green-900/60 transition-colors leading-relaxed"
+            className="flex-1 bg-[#111] border border-[#1e1e1e] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-700 outline-none resize-none focus:border-green-500/40 transition-colors leading-relaxed"
             rows={1}
             style={{ minHeight: '42px', maxHeight: '120px' }}
           />
           <button
             onClick={handleSubmit}
             disabled={loading || (!input.trim() && !pendingImage)}
-            className="p-2.5 bg-green-500 hover:bg-green-400 disabled:bg-[#1a1a1a] disabled:text-gray-700 text-black rounded-xl transition-colors flex-shrink-0 shadow-md shadow-green-900/30 disabled:shadow-none"
+            className="p-2.5 bg-green-500 hover:bg-green-400 disabled:bg-[#1a1a1a] disabled:text-gray-700 text-black rounded-xl transition-all flex-shrink-0 shadow-lg shadow-green-900/30 disabled:shadow-none"
           >
             <Send size={16} />
           </button>
