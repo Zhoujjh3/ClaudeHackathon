@@ -689,6 +689,71 @@
       color: #7A3810;
       line-height: 1.5;
     }
+
+    /* ── Calendar ───────────────────────────────────── */
+    .cal-connect-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--r);
+      color: var(--text-soft);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      background: var(--surface);
+      cursor: pointer;
+      transition: border-color .15s, background .15s, color .15s;
+      font-family: var(--font);
+      width: 100%;
+      text-align: left;
+    }
+    .cal-connect-btn:hover {
+      border-color: var(--accent-mid);
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+    .cal-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .cal-connected-dot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .cal-dot { width: 6px; height: 6px; border-radius: 50%; background: #6db56d; }
+    .cal-refresh-btn {
+      font-family: var(--font);
+      font-size: 11px;
+      color: var(--text-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color .12s;
+    }
+    .cal-refresh-btn:hover { color: var(--text-soft); }
+    .cal-event {
+      display: flex;
+      gap: 14px;
+      align-items: baseline;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .cal-event:last-child { border-bottom: none; }
+    .cal-time { width: 54px; flex-shrink: 0; display: flex; flex-direction: column; gap: 1px; }
+    .cal-time-str { font-family: var(--mono); font-size: 11px; color: var(--text-soft); }
+    .cal-until   { font-size: 10px; color: var(--accent-mid); font-weight: 600; }
+    .cal-title   { font-size: 13px; color: var(--text-soft); line-height: 1.4; }
+    .cal-event--next .cal-title { font-weight: 600; color: var(--text); }
+    .cal-empty { font-size: 13px; color: var(--text-faint); font-style: italic; }
   </style>
 </head>
 <body>
@@ -731,6 +796,11 @@
               </select>
             </div>
           </div>
+        </div>
+
+        <div class="section">
+          <span class="eyebrow">Today's schedule</span>
+          <div id="calendar-content"></div>
         </div>
 
         <div class="section">
@@ -863,18 +933,20 @@
 
 </div>
 <script>
-  const API = 'http://localhost:8000';
+  const API = '';
 
   // ── State ───────────────────────────────────────────
   const S = {
-    tab:          'dashboard',
-    location:     '',
-    energy:       'normal',
-    messages:     [],   // { role, content }
-    chatBusy:     false,
-    snapFile:     null,
-    snapMode:     'general',
-    snapBusy:     false,
+    tab:               'dashboard',
+    location:          '',
+    energy:            'normal',
+    messages:          [],   // { role, content }
+    chatBusy:          false,
+    snapFile:          null,
+    snapMode:          'general',
+    snapBusy:          false,
+    calendarConnected: false,
+    calendarEvents:    null,
   };
 
   // ── Clock ───────────────────────────────────────────
@@ -1039,8 +1111,9 @@
       const body = {
         messages: S.messages.map(m => ({ role: m.role, content: m.content })),
       };
-      if (S.location)          body.location      = S.location;
-      if (S.energy !== 'normal') body.energy_level = S.energy;
+      if (S.location)            body.location        = S.location;
+      if (S.energy !== 'normal') body.energy_level   = S.energy;
+      if (S.calendarEvents)      body.calendar_events = S.calendarEvents;
 
       const res = await fetch(API + '/api/chat', {
         method:  'POST',
@@ -1184,6 +1257,85 @@
       document.getElementById('analyze-label').textContent = 'Analyze Photo';
     }
   });
+
+  // ── Calendar ─────────────────────────────────────────
+  function fmtTime(iso) {
+    if (!iso || !iso.includes('T')) return 'All day';
+    return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function timeUntil(iso) {
+    if (!iso || !iso.includes('T')) return '';
+    const diff = Math.round((new Date(iso) - Date.now()) / 60000);
+    if (diff < 0)  return '';
+    if (diff < 60) return diff + 'm';
+    const h = Math.floor(diff / 60), m = diff % 60;
+    return h + 'h' + (m ? ' ' + m + 'm' : '');
+  }
+
+  function renderCalendar() {
+    const el = document.getElementById('calendar-content');
+    if (!el) return;
+
+    if (!S.calendarConnected) {
+      el.innerHTML = `<a href="${API}/api/calendar/connect" class="cal-connect-btn">📅 Connect Google Calendar — get schedule-aware advice</a>`;
+      return;
+    }
+
+    let html = `<div class="cal-status-row">
+      <span class="cal-connected-dot"><span class="cal-dot"></span> Connected</span>
+      <button class="cal-refresh-btn" onclick="refreshCalendar()">↻ refresh</button>
+    </div>`;
+
+    if (!S.calendarEvents || S.calendarEvents.length === 0) {
+      html += '<p class="cal-empty">No upcoming events today.</p>';
+    } else {
+      S.calendarEvents.forEach((ev, i) => {
+        const t = fmtTime(ev.start);
+        const u = timeUntil(ev.start);
+        html += `<div class="cal-event${i === 0 ? ' cal-event--next' : ''}">
+          <div class="cal-time">
+            <span class="cal-time-str">${t}</span>
+            ${u ? `<span class="cal-until">${u}</span>` : ''}
+          </div>
+          <div class="cal-title">${escHtml(ev.title)}</div>
+        </div>`;
+      });
+    }
+    el.innerHTML = html;
+  }
+
+  async function fetchCalendarEvents() {
+    try {
+      const res = await fetch(API + '/api/calendar/events');
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      S.calendarConnected = true;
+      S.calendarEvents    = data.events;
+    } catch {
+      S.calendarConnected = false;
+      S.calendarEvents    = null;
+    }
+    renderCalendar();
+  }
+
+  async function refreshCalendar() { await fetchCalendarEvents(); }
+
+  // On load: handle OAuth redirect or check existing connection
+  (async function initCalendar() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('calendar') === 'connected') {
+      window.history.replaceState({}, '', window.location.pathname);
+      await fetchCalendarEvents();
+    } else {
+      try {
+        const res  = await fetch(API + '/api/calendar/status');
+        const data = await res.json();
+        if (data.connected) await fetchCalendarEvents();
+        else renderCalendar();
+      } catch { renderCalendar(); }
+    }
+  })();
 </script>
 </body>
 </html>
