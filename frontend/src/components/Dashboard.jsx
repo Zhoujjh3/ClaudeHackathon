@@ -104,7 +104,17 @@ export default function Dashboard({ context, setContext, onScenario, profile, on
     <div className="overflow-y-auto h-[calc(100vh-130px)] px-5 py-4 space-y-5">
       {/* Greeting */}
       <div className="animate-fade-in">
-        <h1 className="font-display text-2xl font-bold text-warm-900">{greeting}.</h1>
+        <div className="flex items-start justify-between">
+          <h1 className="font-display text-2xl font-bold text-warm-900">{greeting}.</h1>
+          <div className="text-right flex-shrink-0 mt-1">
+            <p className="text-lg font-semibold text-warm-800 tabular-nums leading-tight">
+              {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </p>
+            <p className="text-[10px] text-warm-400 mt-0.5">
+              {Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ')}
+            </p>
+          </div>
+        </div>
         <p className="text-warm-400 text-sm mt-1">{now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</p>
       </div>
 
